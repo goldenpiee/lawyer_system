@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import generate_slots_view
 
 app_name = 'appointments'
 
@@ -13,4 +14,6 @@ urlpatterns = [
     path('delete_slot/<int:slot_id>/', views.delete_slot, name='delete_slot'),
     path('create_slot_from_day/', views.create_slot_from_day, name='create_slot_from_day'),
     path('clear_rejected/', views.clear_rejected_appointments, name='clear_rejected'),
+    path('generate-slots/', generate_slots_view, name='generate_slots'),
+    path('clear-all-slots/', views.clear_all_slots, name='clear_all_slots'),
 ]

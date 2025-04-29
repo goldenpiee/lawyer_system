@@ -15,7 +15,12 @@
     {% endif %}
     <h1>Управление расписанием</h1>
     {% if user.lawyerprofile %}
-        
+        <a href="{% url 'appointments:generate_slots' %}" class="btn btn-primary mb-3">
+            Генерировать слоты на месяц вперед
+        </a>
+        <div class="mb-3">
+            <button id="deleteAllSlotsBtn" class="btn btn-danger">Удалить все слоты</button>
+        </div>
     {% endif %}
     <!-- Навигация и заголовок -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -60,6 +65,26 @@
                 <input type="number" id="slotHour" class="form-control mb-2" placeholder="Введите час (0-23)" min="0" max="23">
                 <button id="add-time-btn" class="btn btn-primary w-100" onclick="openCreateSlotModal(selectedDateForSlot)">Добавить время</button>
             {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal для подтверждения удаления -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>ВЫ действительно хотите удалить все слоты?</p>
+                <p class="text-danger" id="deleteCountdown"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>Удалить</button>
+            </div>
         </div>
     </div>
 </div>
@@ -371,6 +396,50 @@ document.addEventListener('DOMContentLoaded', function() {
             alert("Произошла ошибка при отправке запроса.");
         }
     }
+
+    // Добавляем обработчик для кнопки удаления
+    document.getElementById('deleteAllSlotsBtn')?.addEventListener('click', function() {
+        const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+        const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const countdownEl = document.getElementById('deleteCountdown');
+        modal.show();
+        
+        let countdown = 5;
+        confirmBtn.disabled = true;
+        
+        const timer = setInterval(() => {
+            countdown--;
+            countdownEl.textContent = `Подтверждение будет доступно через ${countdown} секунд...`;
+            
+            if (countdown <= 0) {
+                clearInterval(timer);
+                confirmBtn.disabled = false;
+                countdownEl.textContent = 'Теперь вы можете подтвердить удаление';
+            }
+        }, 1000);
+    });
+
+    // Добавляем обработчик для кнопки подтверждения удаления
+    document.getElementById('confirmDeleteBtn')?.addEventListener('click', async function() {
+        try {
+            const response = await fetch('/appointments/clear-all-slots/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            });
+            
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Произошла ошибка при удалении слотов');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Произошла ошибка при отправке запроса');
+        }
+    });
+
     // Первоначальная инициализация
     initCalendar();
 });

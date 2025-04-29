@@ -15,6 +15,8 @@ from django.core.mail import send_mail
 from django.conf import settings
 from zoneinfo import ZoneInfo
 import json
+from django.views.decorators.csrf import csrf_exempt
+from .utils import generate_slots
 
 @login_required
 def client_profile(request):
@@ -90,21 +92,6 @@ def create_appointment(request, slot_id):
     except Exception as e:
         messages.error(request, f"Ошибка при создании записи: {str(e)}")
         return redirect('appointments:calendar')
-
-def generate_slots(start_date, weeks=4):
-    slots = []
-    for week in range(weeks):
-        for day in range(4):  # Вт-Пт (0=понедельник, 1=вторник...)
-            current_date = start_date + timedelta(days=week*7 + day + 1)  # +1 чтобы начать со вторника
-            if current_date.weekday() not in [1, 2, 3, 4]:  # 1=Вт, 4=Пт
-                continue
-            start_time = datetime.combine(current_date, datetime.strptime("14:00", "%H:%M").time())
-            end_time = datetime.combine(current_date, datetime.strptime("18:00", "%H:%M").time())
-            while start_time < end_time:
-                slot_end = start_time + timedelta(minutes=30)
-                slots.append((start_time, slot_end))
-                start_time = slot_end
-    return slots
 
 @login_required
 def select_slot(request):
@@ -195,6 +182,17 @@ def delete_slot(request, slot_id):
             return HttpResponse(str(e), status=500)
     else:
         return HttpResponse("Invalid method", status=405)
+
+@login_required
+@user_passes_test(lambda u: hasattr(u, 'lawyerprofile'))
+def clear_all_slots(request):
+    if request.method == 'POST':
+        try:
+            CalendarSlot.objects.all().delete()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 
 def get_slots_api(request):
     try:
@@ -365,3 +363,17 @@ def clear_rejected_appointments(request):
         )
     
     return redirect('appointments:lawyer_dashboard')
+
+@csrf_exempt
+@login_required
+def generate_slots_view(request):
+    """
+    Представление для генерации слотов через форму.
+    """
+    context = {}
+    if request.method == 'POST':
+        weekdays = request.POST.getlist('weekdays')
+        weekdays = [int(w) for w in weekdays] if weekdays else [1, 2, 3]
+        generate_slots(selected_weekdays=weekdays)
+        context['success'] = True
+    return render(request, 'appointments/generate_slots.html', context)

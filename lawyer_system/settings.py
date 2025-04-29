@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'goida') # Используйте переменную окружения
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true' # Используйте переменную окружения
 
-ALLOWED_HOSTS = ['yourdomain.com', 'localhost', '127.0.0.1']  # Укажите свои домены
+ALLOWED_HOSTS = ['shuttle.proxy.rlwy.net', 'localhost', '127.0.0.1', 'lawyer-system.onrender.com']   # Укажите свои домены
 
 # Application definition
 
@@ -44,7 +44,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Добавлено для WhiteNoise
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -131,8 +130,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # Добавлено для WhiteNoise
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

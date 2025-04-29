@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Генерация слотов на месяц вперед</h2>
+    {% if success %}
+        <div class="alert alert-success">Слоты успешно сгенерированы!</div>
+    {% endif %}
+    {% if cleared %}
+        <div class="alert alert-warning">Все слоты были удалены!</div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        <label>Выберите дни недели для генерации слотов:</label><br>
+        <input type="checkbox" name="weekdays" value="0"> Понедельник<br>
+        <input type="checkbox" name="weekdays" value="1" checked> Вторник<br>
+        <input type="checkbox" name="weekdays" value="2" checked> Среда<br>
+        <input type="checkbox" name="weekdays" value="3" checked> Четверг<br>
+        <input type="checkbox" name="weekdays" value="4"> Пятница<br>
+        <button type="submit" class="btn btn-primary mt-2">Генерировать</button>
+    </form>
+
+<script>
+   
+{% endblock %}
