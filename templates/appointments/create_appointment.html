@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Создать заявку</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Отправить</button>
+</form>
+<style>
+@media (max-width: 576px) {
+    form {
+        font-size: 0.97rem;
+    }
+    .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+}
+</style>
+{% endblock %}

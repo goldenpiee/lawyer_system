@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-5">
+    <div class="row text-center mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-outline">Юридические услуги по банкротству</h1>
+            <h2 class="mt-3 text-primary text-outline">Осипова Оксана Васильевна</h2>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card border-secondary">
+                <div class="card-body ">
+                    <h3 class="card-title mb-4 text-outline text-center">Профессиональная помощь в процедуре банкротства</h3>
+                    <ul class="list-unstyled fs-5 text-center feature-list">
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Консультации физических и юридических лиц</li>
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Сопровождение на всех этапах процедуры</li>
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Законное списание долгов</li>
+                    </ul>
+                </div>
+            </div>  
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Контактная информация -->
+        <div class="col-md-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white text-outline text-center">
+                    <h4>Контакты</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text fs-5">
+                        <i class="bi bi-geo-alt-fill me-2"></i>
+                        г. Сегежа, ул. Ленина 19а<br>
+                        <i class="bi bi-clock-fill me-2"></i>
+                        Вт-Пт: 14:00 - 18:00<br>
+                        <i class="bi bi-telephone-fill me-2"></i>
+                        +7 (900) 123-45-67<br>
+                        <i class="bi bi-envelope-fill me-2"></i>
+                        osipova.bankrot@example.com
+                    </p>
+                    <!-- Карта Яндекс -->
+                    <div style="width:100%;height:250px;" class="my-3">
+                        <!-- Карта с красной меткой на адресе -->
+                        <iframe src="https://yandex.ru/map-widget/v1/?ll=34.307999%2C63.745399&z=16&pt=34.307999,63.745399,pm2rdl" width="100%" height="250" frameborder="0" style="border-radius:8px;" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Действия -->
+        <div class="col-md-8">
+            <div class="card h-50 border-primary" style="min-height:unset;">
+                <div class="card-header bg-primary text-white text-outline text-center p-2" style="padding-top:0.5rem;padding-bottom:0.5rem;">
+                    <h4 class="mb-0">Запись на консультацию</h4>
+                </div>
+                <div class="card-body text-center py-1" style="padding-top:0.5rem;padding-bottom:0.5rem;">
+                    {% if user.is_authenticated %}
+                        <p class="fs-5 mb-1 text-outline">Добро пожаловать, {{ user.full_name }}!</p>
+                        <div class="d-flex flex-column justify-content-center align-items-center gap-3 mb-0 consultation-btns">
+                            {% if user.lawyerprofile %}
+                                <a href="{% url 'appointments:calendar' %}" class="btn btn-primary btn-lg text-outline w-75 mx-auto">
+                                    <i class="bi bi-calendar-plus"></i> Управление расписанием
+                                </a>
+                            {% else %}
+                                <a href="{% if user.is_authenticated %}{% url 'appointments:calendar' %}{% else %}{% url 'accounts:login' %}?next={% url 'appointments:CA' %}{% endif %}" class="btn btn-primary btn-lg text-outline w-75 mx-auto">
+                                    <i class="bi bi-calendar-plus"></i> Записаться
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'accounts:client_profile' %}" class="btn btn-outline-secondary btn-lg text-outline w-75 mx-auto">
+                                <i class="bi bi-files"></i> Мои записи
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="fs-5 mb-1 text-outline">Для записи требуется авторизация</p>
+                        <div class="d-flex flex-column justify-content-center align-items-center gap-3 mb-0 consultation-btns">
+                            <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg text-outline w-75 mx-auto">
+                                <i class="bi bi-box-arrow-in-right"></i> Войти
+                            </a>
+                            <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg text-outline w-75 mx-auto">
+                                <i class="bi bi-person-plus"></i> Регистрация
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+@media (max-width: 576px) {
+    .display-4 {
+        font-size: 1.5rem;
+    }
+    .card .card-header, .card .card-body {
+        font-size: 0.97rem;
+        padding: 0.4rem 0.6rem;
+    }
+    .btn, .btn-lg {
+        font-size: 0.97rem !important;
+        padding: 10px 12px !important;
+    }
+    h1, h2, h3, h4 {
+        font-size: 1.1rem !important;
+    }
+    .feature-list li {
+        font-size: 0.97rem !important;
+    }
+    .card-body .btn {
+        width: 100% !important;
+        min-width: unset;
+    }
+}
+.card-body .btn {
+    width: 90%;
+    min-width: 220px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+.card-body .gap-3, .card-body .gap-2 {
+    margin-bottom: 0 !important;
+}
+.card-body {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.card-header {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.card-body p,
+.card-body h4 {
+    margin-bottom: 0.5rem !important;
+}
+@media (min-width: 577px) {
+    .card-body.text-center.py-2 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.2rem !important;
+    }
+}
+.consultation-btns > .btn {
+    margin-bottom: 0.5rem;
+}
+@media (min-width: 768px) {
+    .consultation-btns.flex-md-row > .btn {
+        margin-bottom: 0 !important;
+        margin-right: 1.5rem;
+    }
+    .consultation-btns.flex-md-row > .btn:last-child {
+        margin-right: 0 !important;
+    }
+}
+</style>
+{% endblock %}

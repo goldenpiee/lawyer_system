@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Редактировать личную информацию</h2>
+    <form method="post" class="p-4 rounded shadow-sm" style="background: #f8f9fa; max-width: 500px; margin: 0 auto;">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="mb-3">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-success">Сохранить изменения</button>
+        <a href="{% url 'accounts:client_profile' %}" class="btn btn-secondary ms-2">Отмена</a>
+    </form>
+</div>
+<style>
+.profile-edit-field {
+    background: #fffbe6 !important;
+    border: 2px solid #ffe58f !important;
+    font-weight: 500;
+}
+@media (max-width: 576px) {
+    form {
+        font-size: 0.97rem;
+    }
+    .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+}
+</style>
+{% endblock %}

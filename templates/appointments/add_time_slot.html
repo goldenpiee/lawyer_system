@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Add Time Slot for {{ date }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Time Slot</button>
+    </form>
+    <style>
+    @media (max-width: 576px) {
+        form {
+            font-size: 0.97rem;
+        }
+        button {
+            font-size: 0.97rem;
+            padding: 8px 10px;
+        }
+    }
+    </style>
+{% endblock %}

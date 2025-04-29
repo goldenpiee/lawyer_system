@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-5">
+                <div class="card-header">
+                    <h2>Вход в систему</h2>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                      {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                      {% endfor %}
+                    {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}<br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            {{ form.username.label_tag }}
+                            <input type="email"
+                                   name="{{ form.username.name }}"
+                                   class="form-control login-field"
+                                   id="id_username"
+                                   placeholder="Email"
+                                   required
+                                   value="{{ form.username.value|default:'' }}">
+                        </div>
+                        <div class="mb-3">
+                            {{ form.password.label_tag }}
+                            <input type="password"
+                                   name="{{ form.password.name }}"
+                                   class="form-control login-field"
+                                   id="id_password"
+                                   placeholder="Пароль"
+                                   required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Войти</button>
+                    </form>
+                    <hr>
+                    <p>Нет аккаунта? <a href="{% url 'accounts:register' %}">Зарегистрироваться</a></p>
+                    <p><a href="{% url 'accounts:password_reset' %}">Забыли пароль?</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.login-field {
+    background: #fffbe6 !important;
+    border: 2px solid #ffe58f !important;
+    font-weight: 500;
+    box-shadow: 0 0 0 2px #ffe58f33;
+}
+@media (max-width: 576px) {
+    .form-control, .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+    h2 {
+        font-size: 1.3rem;
+    }
+}
+</style>
+{% endblock %}
