@@ -3,7 +3,7 @@
 {% block content %}
 {% csrf_token %}
 <div class="container">
-    <h1>Управление расписанием</h1>
+    <h1></h1>
     {% if user.lawyerprofile %}
         <a href="{% url 'appointments:generate_slots' %}" class="btn btn-primary mb-3">
             Генерировать слоты на месяц вперед
@@ -40,16 +40,16 @@
             <div id="choose-time-label" class="mb-2 text-primary fw-bold" style="display: none;">
                 Выберите время для записи
             </div>
-            <div id="slot-list" class="list-group mb-3"></div>
             {% if user.lawyerprofile %}
-                <button id="confirm-btn" class="btn btn-danger w-100" style="display: none;" onclick="deleteSlot(selectedSlotId)">
+                <button id="confirm-btn" class="btn btn-danger w-100 mb-3" style="display: none;" onclick="deleteSlot(selectedSlotId)">
                     Удалить слот
                 </button>
             {% else %}
-                <button id="confirm-btn" class="btn btn-success w-100" style="display: none;" onclick="bookSlot(selectedSlotId)">
+                <button id="confirm-btn" class="btn btn-success w-100 mb-3" style="display: none;" onclick="bookSlot(selectedSlotId)">
                     Записаться
                 </button>
             {% endif %}
+            <div id="slot-list" class="list-group mb-3"></div>
             {% if user.lawyerprofile %}
                 <!-- Новый input для ввода часов -->
                 <input type="number" id="slotHour" class="form-control mb-2" placeholder="Введите час (0-23)" min="0" max="23">

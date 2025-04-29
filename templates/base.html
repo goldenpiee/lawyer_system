@@ -139,6 +139,31 @@
         .navbar-brand:hover:after {
             transform: scaleX(1);
         }
+
+        /* Плавное исчезновение сообщений */
+        .fade-out {
+            opacity: 0 !important;
+            transition: opacity 0.6s;
+        }
     </style>
+    <script>
+        // Автоматическое плавное скрытие сообщений через 2 секунды
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.querySelectorAll('.alert.message-box').forEach(function(el) {
+                    el.classList.add('fade-out');
+                    setTimeout(function() {
+                        // Используем Bootstrap dismiss, если есть, иначе просто скрываем
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                            var alert = bootstrap.Alert.getOrCreateInstance(el);
+                            alert.close();
+                        } else {
+                            el.style.display = 'none';
+                        }
+                    }, 600); // Время совпадает с transition
+                });
+            }, 2000);
+        });
+    </script>
 </body>
 </html>
