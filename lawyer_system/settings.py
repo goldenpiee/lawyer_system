@@ -26,11 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'goida') # Используйте переменную окружения
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true' # Используйте переменную окружения
 
-<<<<<<< HEAD
 ALLOWED_HOSTS = ['shuttle.proxy.rlwy.net', 'localhost', '127.0.0.1', 'lawyer-system.onrender.com']   # Укажите свои домены
-=======
-ALLOWED_HOSTS = ['shuttle.proxy.rlwy.net', 'localhost', '127.0.0.1', 'lawyer-system.onrender.com']  # Укажите свои домены
->>>>>>> refs/remotes/origin/main
 
 # Application definition
 
