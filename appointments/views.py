@@ -11,7 +11,7 @@ from .forms import CalendarSlotForm
 from django.http import JsonResponse, HttpResponse
 from django.core import serializers
 from django.utils.timezone import make_aware, get_current_timezone
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.conf import settings
 from zoneinfo import ZoneInfo
 import json
@@ -288,11 +288,9 @@ def update_appointment_status(request, appointment_id):
                 start_time=appointment.date
             )
             if new_status == 'Rejected':
-                # Если запись отменена, освобождаем слот
                 slot.is_booked = False
                 slot.save()
         except CalendarSlot.DoesNotExist:
-            # Если слот не найден, создаем новый
             if new_status == 'Rejected':
                 CalendarSlot.objects.create(
                     lawyer=appointment.lawyer,
@@ -301,47 +299,41 @@ def update_appointment_status(request, appointment_id):
                     is_booked=False
                 )
         
-        # --- Отправка письма при подтверждении заявки ---
-        if old_status != 'Approved' and new_status == 'Approved':
-            moscow_tz = ZoneInfo('Europe/Moscow')
-            local_dt = appointment.date.astimezone(moscow_tz)
-            send_mail(
-                'Ваша заявка подтверждена',
-                f'Здравствуйте, {appointment.client.full_name}!\n\nВаша заявка на консультацию подтверждена. Ждём вас {local_dt.strftime("%d.%m.%Y в %H:%M")} (МСК).',
-                'Юридические услуги по банкротству <matrica646@gmail.com>',
-                [appointment.client.email],
-                fail_silently=False,
-            )
-        # --- Отправка письма при отклонении заявки (если была Pending) ---
-        if old_status == 'Pending' and new_status == 'Rejected':
-            moscow_tz = ZoneInfo('Europe/Moscow')
-            local_dt = appointment.date.astimezone(moscow_tz)
-            send_mail(
-                'Ваша заявка отклонена',
-                f'Здравствуйте, {appointment.client.full_name}!\n\nК сожалению, ваша заявка на консультацию {local_dt.strftime("%d.%m.%Y в %H:%M")} (МСК) была отклонена. Вы можете выбрать другое время.',
-                'Юридические услуги по банкротству <matrica646@gmail.com>',
-                [appointment.client.email],
-                fail_silently=False,
-            )
-        # --- Отправка письма при отмене подтвержденной заявки ---
-        if old_status == 'Approved' and new_status == 'Rejected':
-            moscow_tz = ZoneInfo('Europe/Moscow')
-            local_dt = appointment.date.astimezone(moscow_tz)
-            send_mail(
-                'Ваша запись отменена',
-                f'Здравствуйте, {appointment.client.full_name}!\n\nВаша ранее подтвержденная запись на {local_dt.strftime("%d.%m.%Y в %H:%M")} (МСК) была отменена юристом. Вы можете выбрать другое время.',
-                'Юридические услуги по банкротству <matrica646@gmail.com>',
-                [appointment.client.email],
-                fail_silently=False,
-            )
+        # --- Отправка email уведомлений ---
+        moscow_tz = ZoneInfo('Europe/Moscow')
+        local_dt = appointment.date.astimezone(moscow_tz)
+        email_data = None
 
-        if old_status == 'Approved' and new_status == 'Rejected':
+        if old_status != 'Approved' and new_status == 'Approved':
+            email_data = {
+                'subject': 'Ваша заявка подтверждена',
+                'body': f'Здравствуйте, {appointment.client.full_name}!\n\nВаша заявка на консультацию подтверждена. Ждём вас {local_dt.strftime("%d.%m.%Y")} в {local_dt.strftime("%H:%M")} (MSK).'
+            }
+            message = 'Заявка успешно подтверждена'
+        elif old_status == 'Pending' and new_status == 'Rejected':
+            email_data = {
+                'subject': 'Ваша заявка отклонена',
+                'body': f'Здравствуйте, {appointment.client.full_name}!\n\nК сожалению, ваша заявка на консультацию {local_dt.strftime("%d.%m.%Y")} в {local_dt.strftime("%H:%M")} (MSK) была отклонена. Вы можете выбрать другое время.'
+            }
+            message = 'Заявка успешно отклонена'
+        elif old_status == 'Approved' and new_status == 'Rejected':
+            email_data = {
+                'subject': 'Ваша запись отменена',
+                'body': f'Здравствуйте, {appointment.client.full_name}!\n\nВаша ранее подтвержденная запись на {local_dt.strftime("%d.%m.%Y")} в {local_dt.strftime("%H:%M")} (MSK) была отменена юристом. Вы можете выбрать другое время.'
+            }
             message = 'Запись успешно отменена'
-        else:
-            message = f'Статус записи успешно обновлен на {new_status}'
-            
-        messages.success(request, message)
-    
+
+        if email_data:
+            email = EmailMessage(
+                subject=email_data['subject'],
+                body=email_data['body'],
+                from_email='Юридические услуги по банкротству <matrica646@gmail.com>',
+                to=[appointment.client.email],
+                headers={'Content-Type': 'text/plain; charset=utf-8'}
+            )
+            email.send(fail_silently=False)
+            messages.success(request, message)
+
     return redirect('appointments:lawyer_dashboard')
 
 @login_required

@@ -1,25 +1,106 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Генерация слотов на месяц вперед</h2>
-    {% if success %}
-        <div class="alert alert-success">Слоты успешно сгенерированы!</div>
-    {% endif %}
-    {% if cleared %}
-        <div class="alert alert-warning">Все слоты были удалены!</div>
-    {% endif %}
-    
-    <form method="post">
-        {% csrf_token %}
-        <label>Выберите дни недели для генерации слотов:</label><br>
-        <input type="checkbox" name="weekdays" value="0"> Понедельник<br>
-        <input type="checkbox" name="weekdays" value="1" checked> Вторник<br>
-        <input type="checkbox" name="weekdays" value="2" checked> Среда<br>
-        <input type="checkbox" name="weekdays" value="3" checked> Четверг<br>
-        <input type="checkbox" name="weekdays" value="4"> Пятница<br>
-        <button type="submit" class="btn btn-primary mt-2">Генерировать</button>
-    </form>
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">Генерация слотов на месяц</h2>
+            
+            {% if success %}
+                <div class="alert alert-success mb-4">Слоты успешно сгенерированы!</div>
+            {% endif %}
+            {% if cleared %}
+                <div class="alert alert-warning mb-4">Все слоты были удалены!</div>
+            {% endif %}
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-3">Выберите дни недели для генерации слотов:</label>
+                    <div class="weekday-options">
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday0" name="weekdays" value="0">
+                            <label class="btn btn-outline-primary w-100" for="weekday0">Понедельник</label>
+                        </div>
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday1" name="weekdays" value="1" checked>
+                            <label class="btn btn-outline-primary w-100" for="weekday1">Вторник</label>
+                        </div>
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday2" name="weekdays" value="2" checked>
+                            <label class="btn btn-outline-primary w-100" for="weekday2">Среда</label>
+                        </div>
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday3" name="weekdays" value="3" checked>
+                            <label class="btn btn-outline-primary w-100" for="weekday3">Четверг</label>
+                        </div>
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday4" name="weekdays" value="4">
+                            <label class="btn btn-outline-primary w-100" for="weekday4">Пятница</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-4">Генерировать слоты</button>
+            </form>
+        </div>
+    </div>
+</div>
 
-<script>
-   
+<style>
+.weekday-options {
+    display: grid;
+    gap: 10px;
+}
+
+.weekday-option {
+    margin-bottom: 5px;
+}
+
+.btn-outline-primary {
+    border: 2px solid #475569;
+    color: #475569;
+    background-color: white;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: #475569;
+    border-color: #475569;
+    color: white;
+}
+
+.btn-check:checked + .btn-outline-primary {
+    background-color: #475569;
+    border-color: #475569;
+    color: white;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.btn-primary {
+    background-color: #475569;
+    border-color: #475569;
+}
+
+.btn-primary:hover {
+    background-color: #334155;
+    border-color: #334155;
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 10px;
+    }
+    .card-body {
+        padding: 15px;
+    }
+    .btn {
+        padding: 8px;
+        font-size: 0.95rem;
+    }
+}
+</style>
 {% endblock %}

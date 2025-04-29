@@ -4,7 +4,7 @@ from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.contrib.auth import get_user_model
@@ -39,13 +39,16 @@ def register(request):
             code = get_random_string(6, allowed_chars='0123456789')
             request.session['registration_email'] = user.email
             request.session['registration_code'] = code
-            send_mail(
-                'Код подтверждения регистрации',
-                f'Ваш код для подтверждения регистрации: {code}',
-                'Юридические услуги по банкротству <matrica646@gmail.com>',
-                [user.email],
-                fail_silently=False,
+            
+            email = EmailMessage(
+                subject='Код подтверждения регистрации',
+                body=f'Ваш код для подтверждения регистрации: {code}',
+                from_email='Юридические услуги по банкротству <matrica646@gmail.com>',
+                to=[user.email],
+                headers={'Content-Type': 'text/plain; charset=utf-8'}
             )
+            email.send(fail_silently=False)
+            
             messages.success(request, 'Код отправлен на ваш email.')
             return redirect('accounts:confirm_email')
     else:
@@ -107,7 +110,7 @@ def edit_profile(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Личная информация успешно обновлена.")
-            return redirect('appointments:client_dashboard')
+            return redirect('accounts:client_profile')  # Изменено с 'appointments:client_dashboard'
     else:
         form = ProfileEditForm(instance=request.user)
     return render(request, 'accounts/edit_profile.html', {'form': form})
@@ -123,24 +126,21 @@ def password_reset_request(request):
                 code = get_random_string(6, allowed_chars='0123456789')
                 request.session['reset_email'] = email
                 request.session['reset_code'] = code
-                send_mail(
-                    'Код для сброса пароля',
-                    f'Ваш код для сброса пароля: {code}',
-                    'Юридические услуги по банкротству <matrica646@gmail.com>',
-                    [email],
-                    fail_silently=False,
+                email_message = EmailMessage(
+                    subject='Код для сброса пароля',
+                    body=f'Ваш код для сброса пароля: {code}',
+                    from_email='Юридические услуги по банкротству <matrica646@gmail.com>',
+                    to=[email],
+                    headers={'Content-Type': 'text/plain; charset=utf-8'}
                 )
-                code_sent = True
+                email_message.send(fail_silently=False)
                 messages.success(request, "Код отправлен на ваш email.")
-                # Редирект на страницу ввода кода
                 return redirect('accounts:password_reset_confirm')
             else:
                 form.add_error('email', 'Пользователь с таким email не найден.')
-        # Всегда передавать code_sent (будет False если не отправлен)
-        return render(request, 'registration/password_reset_request.html', {'form': form, 'code_sent': code_sent})
     else:
         form = PasswordResetRequestForm()
-    return render(request, 'registration/password_reset_request.html', {'form': form, 'code_sent': code_sent})
+    return render(request, 'registration/password_reset_request.html', {'form': form})
 
 def password_reset_confirm(request):
     if request.method == 'POST':

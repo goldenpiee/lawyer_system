@@ -1,100 +1,169 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container">
+<div class="container" style="max-width: 800px;">
     <h2 class="mb-4 text-center">Профиль пользователя</h2>
-    {% if messages %}
-      <div>
-        {% for message in messages %}
-          <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-    <div class="card mb-4" style="max-width: 500px; margin: 0 auto;">
+    <div class="card mb-4 shadow-sm">
         <div class="card-body">
-            <h5 class="card-title mb-3">{{ user.full_name }}</h5>
-            <p class="mb-1"><strong>Email:</strong> {{ user.email }}</p>
-            <p class="mb-1"><strong>Телефон:</strong> {{ user.phone }}</p>
-            <a href="{% url 'accounts:edit_profile' %}" class="btn btn-outline-primary btn-sm mt-2">Редактировать</a>
+            <h5 class="card-title mb-3 text-primary text-center">{{ user.full_name }}</h5>
+            <div class="user-info text-center">
+                <p class="mb-2"><i class="bi bi-envelope me-2"></i><strong>Email:</strong> {{ user.email }}</p>
+                <p class="mb-2"><i class="bi bi-telephone me-2"></i><strong>Телефон:</strong> {{ user.phone }}</p>
+            </div>
+            <a href="{% url 'accounts:edit_profile' %}" class="btn btn-outline-primary mt-3 w-100">
+                <i class="bi bi-pencil-square me-2"></i>Редактировать профиль
+            </a>
         </div>
     </div>
-    <h4 class="mb-3 text-center">Ваши заявки</h4>
-    {% if appointments %}
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead class="table-primary">
-                <tr>
-                    <th scope="col">Дата</th>
-                    <th scope="col">Статус</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for appointment in appointments %}
-                <tr>
-                    <td>{{ appointment.date|date:"d.m.Y H:i" }}</td>
-                    <td>
-                        {% if appointment.status == "Pending" %}
-                            <span style="color:secondary; font-weight:bold; background-color:rgba(255,255,0,0.3); padding:0.2rem 0.4rem; border-radius:4px;">Ожидает подтверждение</span>
-                        {% elif appointment.status == "Rejected" %}
-                            <span style="color:red; font-weight:bold; background-color:rgba(255,0,0,0.3); padding:0.2rem 0.4rem; border-radius:4px;">Запись отменена</span>
-                        {% elif appointment.status == "Approved" %}
-                            <span style="color:green; font-weight:bold; background-color:rgba(0,128,0,0.3); padding:0.2rem 0.4rem; border-radius:4px;">Запись подтверждена</span>
-                        {% else %}
-                            <span style="font-weight:bold;">{{ appointment.status }}</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="mb-4 text-center">История записей</h4>
+            {% if appointments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-center">Дата</th>
+                            <th scope="col" class="text-center">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                        <tr>
+                            <td class="text-center align-middle">{{ appointment.date|date:"d.m.Y H:i" }}</td>
+                            <td class="text-center align-middle">
+                                {% if appointment.status == "Pending" %}
+                                    <span class="status-badge pending">Ожидает подтверждения</span>
+                                {% elif appointment.status == "Rejected" %}
+                                    <span class="status-badge rejected">Запись отменена</span>
+                                {% elif appointment.status == "Approved" %}
+                                    <span class="status-badge approved">Запись подтверждена</span>
+                                {% else %}
+                                    <span class="status-badge">{{ appointment.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-calendar-x fs-1 mb-3"></i>
+                <p class="mb-0">Нет активных записей</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% else %}
-    <p class="text-center">Нет записей</p>
-    {% endif %}
 </div>
+
 <style>
+.card {
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.user-info p {
+    color: #475569;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.table-responsive {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.5rem;
+    background-color: white;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead {
+    background-color: #f8f9fa;
+    border: 1px solid #e2e8f0;
+}
+
+.table th {
+    font-weight: 600;
+    color: #475569;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+}
+
+.table td {
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.status-badge.pending {
+    background-color: rgba(234, 179, 8, 0.2);
+    color: rgb(161, 98, 7);
+}
+
+.status-badge.rejected {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: rgb(185, 28, 28);
+}
+
+.status-badge.approved {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: rgb(21, 128, 61);
+}
+
 @media (max-width: 576px) {
     .table thead {
         display: none;
     }
+    
     .table, .table tbody, .table tr, .table td {
         display: block;
         width: 100%;
     }
+    
     .table tr {
         margin-bottom: 1rem;
-        border-bottom: 2px solid #dee2e6;
+        padding: 0.5rem;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        border: 1px solid #e2e8f0;
     }
+    
     .table td {
-        text-align: right;
-        padding-left: 50%;
-        position: relative;
-    }
-    .table td:before {
-        position: absolute;
-        left: 0;
-        width: 50%;
-        padding-left: 1rem;
-        white-space: nowrap;
-        font-weight: bold;
         text-align: left;
-        content: attr(data-label);
+        padding: 0.5rem;
+        border: none;
+    }
+    
+    .table td:first-child {
+        font-weight: 500;
+        color: #475569;
+    }
+    
+    .card-body {
+        padding: 1rem;
     }
 }
 </style>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    if (window.innerWidth <= 576) {
-        document.querySelectorAll('table.table tbody tr').forEach(function(row) {
-            var tds = row.querySelectorAll('td');
-            if (tds.length === 2) {
-                tds[0].setAttribute('data-label', 'Дата');
-                tds[1].setAttribute('data-label', 'Статус');
-            }
-        });
-    }
-});
-</script>
 {% endblock %}
