@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'goida') # Используйте переменную окружения
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true' # Используйте переменную окружения
 
-ALLOWED_HOSTS = ['yourdomain.com', 'localhost', '127.0.0.1']  # Укажите свои домены
+ALLOWED_HOSTS = ['shuttle.proxy.rlwy.net:27776', 'localhost', '127.0.0.1']  # Укажите свои домены
 
 # Application definition
 
