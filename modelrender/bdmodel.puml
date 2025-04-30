@@ -1,0 +1,83 @@
+@startuml Реляционная_Модель_БД_Записи_к_Юристу_v3
+
+' --- Настройки внешнего вида ---
+hide empty members
+skinparam linetype ortho
+skinparam shadowing false
+skinparam handwritten false
+' Убрана строка skinparam defaultFontName
+skinparam entity { 
+    BackgroundColor White
+    BorderColor #6C757D
+    HeaderBackgroundColor #6C757D
+    FontColor #333333
+    HeaderFontColor White
+    BorderThickness 1.5
+}
+skinparam arrow {
+    Color #333333
+    Thickness 1.5
+    FontColor #333333
+    FontSize 10
+}
+
+title Реляционная модель БД: Система записи к юристу (v3)
+
+' --- Сущности (представляющие таблицы) ---
+
+entity "clients" as Clients {
+  **client_id** : INTEGER <<PK>>
+  --
+  full_name : VARCHAR(255) <<NN>>
+  email : VARCHAR(254) <<UQ>> <<NN>>
+  phone : VARCHAR(20)
+}
+
+entity "lawyers" as Lawyers {
+  **lawyer_id** : INTEGER <<PK>>
+  --
+  full_name : VARCHAR(255) <<NN>>
+  email : VARCHAR(254) <<UQ>> <<NN>>
+  phone : VARCHAR(20)
+  office_address : VARCHAR(255)
+  specialization : VARCHAR(100)
+}
+
+entity "appointments" as Appointments {
+  **appointment_id** : INTEGER <<PK>>
+  --
+  client_id : INTEGER <<FK>> <<NN>> ' Внешний ключ к clients
+  lawyer_id : INTEGER <<FK>> <<NN>> ' Внешний ключ к lawyers
+  slot_id : INTEGER <<FK>> <<NN>>   ' Внешний ключ к calendar_slots
+  appointment_datetime : TIMESTAMP <<NN>>
+  status : VARCHAR(50) <<NN>>
+}
+
+entity "calendar_slots" as CalendarSlots {
+  **slot_id** : INTEGER <<PK>>
+  --
+  lawyer_id : INTEGER <<FK>> <<NN>> ' Внешний ключ к lawyers
+  start_time : TIMESTAMP <<NN>>
+  end_time : TIMESTAMP <<NN>>
+  is_booked : BOOLEAN <<NN>>
+}
+
+' --- Связи (Внешние ключи) ---
+
+Appointments }o--|| Clients : "client_id"
+Appointments }o--|| Lawyers : "lawyer_id"
+Appointments }o--|| CalendarSlots: "slot_id"
+CalendarSlots }o--|| Lawyers : "lawyer_id"
+
+' --- Легенда (опционально) ---
+legend left
+  | Обозначение | Значение |
+  |---|---|
+  | <<PK>> | Primary Key (Первичный ключ) |
+  | <<FK>> | Foreign Key (Внешний ключ) |
+  | <<UQ>> | Unique Constraint (Ограничение уникальности) |
+  | <<NN>> | Not Null Constraint (Не может быть NULL) |
+  | }o--|| | Связь "Многие к Одному" (Crow's Foot Notation) |
+end legend
+
+@enduml

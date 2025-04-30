@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Add your apps here
     'appointments.apps.AppointmentsConfig',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
