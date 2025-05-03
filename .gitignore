@@ -1,0 +1,30 @@
+# Database
+db.sqlite3
+*.sqlite3
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Static & Media
+/media/
+/static/
+/staticfiles/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Migration cache
+*/migrations/__pycache__/
+*/*/*/migrations/__pycache__/
