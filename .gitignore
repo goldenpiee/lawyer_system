@@ -3,11 +3,6 @@ db.sqlite3
 *.sqlite3
 *.db
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-
 # Environment variables
 .env
 
@@ -25,6 +20,3 @@ venv/
 env/
 ENV/
 
-# Migration cache
-*/migrations/__pycache__/
-*/*/*/migrations/__pycache__/
