@@ -17,8 +17,6 @@ __pycache__/
 .idea/
 
 # Static & Media
-/media/
-/static/
 /staticfiles/
 
 # Virtual environment

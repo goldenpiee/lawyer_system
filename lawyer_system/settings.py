@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'goida') # Используйте переменную окружения
-DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true' # Используйте переменную окружения
+DEBUG = False # Debug mode is now disabled by default
 
 ALLOWED_HOSTS = ['shuttle.proxy.rlwy.net', 'localhost', '127.0.0.1', 'lawyer-system.onrender.com']   # Укажите свои домены
 
