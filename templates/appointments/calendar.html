@@ -5,8 +5,8 @@
 <div class="container">
     <h1></h1>
     {% if user.lawyerprofile %}
-        <a href="{% url 'appointments:generate_slots' %}" class="btn btn-primary mb-3">
-            Генерировать слоты на месяц вперед
+        <a href="{% url 'appointments:generate_slots_days' %}" class="btn btn-primary mb-3">
+            Генерировать слоты по выбранным дням
         </a>
         <div class="mb-3">
             <button id="deleteAllSlotsBtn" class="btn btn-danger">Удалить все слоты</button>
@@ -51,8 +51,6 @@
             {% endif %}
             <div id="slot-list" class="list-group mb-3"></div>
             {% if user.lawyerprofile %}
-                <!-- Новый input для ввода часов -->
-                <input type="number" id="slotHour" class="form-control mb-2" placeholder="Введите час (0-23)" min="0" max="23">
                 <button id="add-time-btn" class="btn btn-primary w-100" onclick="openCreateSlotModal(selectedDateForSlot)">Добавить время</button>
             {% endif %}
         </div>
@@ -79,12 +77,44 @@
     </div>
 </div>
 
-<div id="createSlotForm" style="display: none;">
-    <label for="slotStartTime">Время начала:</label>
-    <input type="time" id="slotStartTime"><br>
-    <label for="slotEndTime">Время окончания:</label>
-    <input type="time" id="slotEndTime"><br>
-    <button onclick="createSlot()">Добавить время</button>
+<!-- Замена формы создания слота -->
+<div id="createSlotForm" style="display: none;" class="card mt-3 mx-auto" style="max-width: 400px;">
+    <div class="card-body p-4">
+        <h5 class="card-title mb-4 text-center">Создание слота на <span id="selectedDateDisplay"></span></h5>
+        <div class="row g-3">
+            <div class="col-12">
+                <label for="slotStartTime" class="form-label mb-2">Выберите время</label>
+                <select id="slotStartTime" class="form-select form-select-sm">
+                    <option value="">Выберите время</option>
+                    <option value="09:00">09:00</option>
+                    <option value="09:30">09:30</option>
+                    <option value="10:00">10:00</option>
+                    <option value="10:30">10:30</option>
+                    <option value="11:00">11:00</option>
+                    <option value="11:30">11:30</option>
+                    <option value="12:00">12:00</option>
+                    <option value="12:30">12:30</option>
+                    <option value="13:00">13:00</option>
+                    <option value="13:30">13:30</option>
+                    <option value="14:00">14:00</option>
+                    <option value="14:30">14:30</option>
+                    <option value="15:00">15:00</option>
+                    <option value="15:30">15:30</option>
+                    <option value="16:00">16:00</option>
+                    <option value="16:30">16:30</option>
+                    <option value="17:00">17:00</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4 d-flex justify-content-between gap-2">
+            <button type="button" class="btn btn-secondary btn-sm flex-grow-1" onclick="hideCreateSlotForm()">
+                Отмена
+            </button>
+            <button type="button" class="btn btn-primary btn-sm flex-grow-1" onclick="createSlot()">
+                Создать слот
+            </button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -335,34 +365,37 @@ document.addEventListener('DOMContentLoaded', function() {
     window.openCreateSlotModal = function(date) {
         const isLawyer = {{ user.lawyerprofile|yesno:"true,false" }};
         if (!isLawyer) return;
+        
         if(date) {
             selectedDateForSlot = date;
+            const formattedDate = new Date(date).toLocaleDateString('ru-RU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('selectedDateDisplay').textContent = formattedDate;
+            document.getElementById('createSlotForm').style.display = 'block';
+            document.getElementById('add-time-btn').style.display = 'none';
+            document.getElementById('slotStartTime').value = ''; // Сброс выбора времени
         }
-        // Read the hour input value from the new field
-        const hourValue = document.getElementById('slotHour').value;
-        if(hourValue !== "") {
-            // Format hour as two digits and set start and end time values
-            const formattedHour = hourValue.padStart(2, '0');
-            document.getElementById('slotStartTime').value = formattedHour + ":00";
-            let endHour = (parseInt(hourValue, 10) + 1).toString().padStart(2, '0');
-            document.getElementById('slotEndTime').value = endHour + ":00";
-        } else {
-            document.getElementById('slotStartTime').value = "";
-            document.getElementById('slotEndTime').value = "";
-        }
-        document.getElementById('createSlotForm').style.display = 'block';
-        document.getElementById('add-time-btn').style.display = 'none';
     }
+
+    window.hideCreateSlotForm = function() {
+        document.getElementById('createSlotForm').style.display = 'none';
+        document.getElementById('add-time-btn').style.display = 'block';
+    }
+
     window.createSlot = async function() {
         const startTime = document.getElementById('slotStartTime').value;
-        const endTime = document.getElementById('slotEndTime').value;
-        if (!startTime || !endTime) {
-            alert("Пожалуйста, введите время начала и окончания.");
+        
+        if (!startTime) {
+            alert('Пожалуйста, выберите время.');
             return;
         }
+
         try {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const response = await fetch(`/appointments/create_slot_from_day/`, {
+            const response = await fetch('/appointments/create_slot_from_day/', {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -371,19 +404,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     date: selectedDateForSlot,
-                    startTime: startTime,
-                    endTime: endTime
+                    startTime: startTime
                 })
             });
+
             if (response.ok) {
-                alert("Слот успешно создан.");
+                document.getElementById('createSlotForm').style.display = 'none';
+                document.getElementById('add-time-btn').style.display = 'block';
+                document.getElementById('slotStartTime').value = '';
+                
+                await loadSlots(currentDate.getFullYear(), currentDate.getMonth() + 1);
+                
+                const selectedDayElement = document.querySelector(`[data-date="${selectedDateForSlot}"]`);
+                if (selectedDayElement) {
+                    showTimeSlots(selectedDayElement.parentElement.querySelector('.calendar-day'));
+                    selectedDayElement.parentElement.querySelector('.calendar-day').classList.add('selected-day');
+                }
+                
+                // После успешного создания перезагружаем страницу для отображения сообщения
                 window.location.reload();
             } else {
-                alert("Ошибка при создании слота.");
+                alert('Ошибка при создании слота');
             }
         } catch (error) {
-            console.error("Ошибка:", error);
-            alert("Произошла ошибка при отправке запроса.");
+            console.error('Ошибка:', error);
+            alert('Произошла ошибка при отправке запроса');
         }
     }
 
@@ -497,35 +542,28 @@ document.addEventListener('DOMContentLoaded', function() {
     bottom: 8px;
 }
 #createSlotForm {
-    margin-top: 20px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+    max-width: 400px;
+    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-#createSlotForm label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+
+#createSlotForm .card-body {
+    padding: 1.5rem;
 }
-#createSlotForm input[type="time"] {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+
+#createSlotForm .form-select {
+    font-size: 0.9rem;
+    padding: 0.375rem 0.75rem;
 }
-#createSlotForm button {
-    background-color: #007bff;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+
+#createSlotForm .btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
 }
-#createSlotForm button:hover {
-    background-color: #0056b3;
+
+#selectedDateDisplay {
+    color: #007bff;
+    font-weight: 500;
 }
 .available-day:not(.past-day):hover {
     transform: scale(1.05);

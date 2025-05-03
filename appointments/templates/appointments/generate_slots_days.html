@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Выберите дни для генерации слотов</h2>
+    <div id="calendar-days" class="mb-3"></div>
+    <form id="generateSlotsForm" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="selected_dates" id="selectedDatesInput">
+        <div class="mb-3">
+            <label>Время начала:</label>
+            <input type="time" name="start_time" required>
+        </div>
+        <div class="mb-3">
+            <label>Время окончания:</label>
+            <input type="time" name="end_time" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Сгенерировать слоты</button>
+    </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+    let selectedDays = new Set();
+
+    function renderCalendar(month, year) {
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        let html = `<div class="d-flex justify-content-between align-items-center mb-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="prevMonthBtn">&laquo;</button>
+            <span><b>${firstDay.toLocaleString('ru-RU', {month: 'long'})} ${year}</b></span>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="nextMonthBtn">&raquo;</button>
+        </div>`;
+        html += '<div class="row row-cols-7 mb-1">';
+        ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => {
+            html += `<div class="col text-center fw-bold">${d}</div>`;
+        });
+        html += '</div><div class="row row-cols-7">';
+        let dayOfWeek = (firstDay.getDay() + 6) % 7;
+        for (let i = 0; i < dayOfWeek; i++) html += '<div class="col"></div>';
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const isSelected = selectedDays.has(dateStr);
+            html += `<div class="col mb-2">
+                <div class="calendar-day-selectable${isSelected ? ' selected' : ''}" 
+                    data-date="${dateStr}" style="cursor:pointer;user-select:none;">
+                    ${day}
+                </div>
+            </div>`;
+            if ((dayOfWeek + day) % 7 === 0) html += '</div><div class="row row-cols-7">';
+        }
+        html += '</div>';
+        document.getElementById('calendar-days').innerHTML = html;
+
+        document.getElementById('prevMonthBtn').onclick = () => {
+            if (currentMonth === 0) { currentMonth = 11; currentYear--; }
+            else currentMonth--;
+            renderCalendar(currentMonth, currentYear);
+        };
+        document.getElementById('nextMonthBtn').onclick = () => {
+            if (currentMonth === 11) { currentMonth = 0; currentYear++; }
+            else currentMonth++;
+            renderCalendar(currentMonth, currentYear);
+        };
+        document.querySelectorAll('.calendar-day-selectable').forEach(el => {
+            el.onclick = function() {
+                const date = this.dataset.date;
+                if (selectedDays.has(date)) selectedDays.delete(date);
+                else selectedDays.add(date);
+                renderCalendar(currentMonth, currentYear);
+            };
+        });
+    }
+    renderCalendar(currentMonth, currentYear);
+
+    document.getElementById('generateSlotsForm').onsubmit = function(e) {
+        if (selectedDays.size === 0) {
+            alert('Выберите хотя бы один день!');
+            e.preventDefault();
+            return false;
+        }
+        document.getElementById('selectedDatesInput').value = Array.from(selectedDays).join(',');
+    };
+});
+</script>
+<style>
+.calendar-day-selectable {
+    padding: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: #f8f9fa;
+    text-align: center;
+    margin-bottom: 2px;
+    transition: background 0.2s, border 0.2s;
+}
+.calendar-day-selectable.selected {
+    background: #cce5ff;
+    border-color: #007bff;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

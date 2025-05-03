@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-body">
+            <h2 class="card-title mb-4">Генерация слотов</h2>
+            
+            <div class="mb-3">
+                <a href="{% url 'appointments:calendar' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Вернуться к календарю
+                </a>
+            </div>
+            
+            {% if success %}
+                <div class="alert alert-success">
+                    Успешно создано слотов: {{ slots_created }}
+                </div>
+            {% endif %}
+            {% if error %}
+                <div class="alert alert-danger">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="calendar-container bg-white p-3 rounded shadow-sm mb-3">
+                        <div id="calendar-days"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <form id="generateSlotsForm" method="post" class="bg-white p-3 rounded shadow-sm">
+                        {% csrf_token %}
+                        <input type="hidden" name="selected_dates" id="selectedDatesInput">
+                        
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Выбранные дни:</label>
+                            <div id="selectedDatesDisplay" class="selected-dates p-2 rounded bg-light">
+                                <em class="text-muted">Нет выбранных дней</em>
+                            </div>
+                        </div>
+
+                        <div class="time-picker mb-4">
+                            <label class="form-label fw-bold">Время работы:</label>
+                            <div class="d-flex gap-3 align-items-center mb-2">
+                                <div class="flex-grow-1">
+                                    <label class="small text-muted">Начало</label>
+                                    <select name="start_time" class="form-select" required>
+                                        <option value="">Выберите...</option>
+                                        <option value="09:00">09:00</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="16:00">16:00</option>
+                                    </select>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <label class="small text-muted">Конец</label>
+                                    <select name="end_time" class="form-select" required>
+                                        <option value="">Выберите...</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Сгенерировать слоты
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.calendar-container {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+}
+.calendar-day-selectable {
+    padding: 12px 8px;
+    margin: 2px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+.calendar-day-selectable:hover:not(.disabled) {
+    background: #f8f9fa;
+    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.calendar-day-selectable.selected {
+    background: #435ebe;
+    color: white;
+    border-color: #435ebe;
+}
+.calendar-day-selectable.disabled {
+    background: #f8f9fa;
+    cursor: not-allowed;
+}
+.calendar-header {
+    margin-bottom: 1rem;
+}
+.calendar-header h5 {
+    text-transform: capitalize;
+}
+.selected-dates {
+    min-height: 60px;
+    border: 1px solid #dee2e6;
+}
+.time-picker select {
+    font-size: 0.95rem;
+    padding: 8px;
+}
+.form-select:focus {
+    border-color: #435ebe;
+    box-shadow: 0 0 0 0.25rem rgba(67, 94, 190, 0.25);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+    let selectedDays = new Set();
+
+    function updateSelectedDatesDisplay() {
+        const display = document.getElementById('selectedDatesDisplay');
+        if (selectedDays.size === 0) {
+            display.innerHTML = '<em class="text-muted">Нет выбранных дней</em>';
+        } else {
+            const dates = Array.from(selectedDays).map(dateStr => {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long'
+                });
+            }).sort();
+            display.innerHTML = dates.map(d => `<span class="badge bg-primary me-2 mb-2">${d}</span>`).join('');
+        }
+    }
+
+    function renderCalendar(month, year) {
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        
+        let html = '<div class="calendar-header d-flex justify-content-between align-items-center mb-3">';
+        html += `<button type="button" class="btn btn-outline-secondary btn-sm" id="prevMonthBtn">❮</button>`;
+        html += `<h5 class="mb-0">${firstDay.toLocaleString('ru-RU', {month: 'long', year: 'numeric'})}</h5>`;
+        html += `<button type="button" class="btn btn-outline-secondary btn-sm" id="nextMonthBtn">❯</button>`;
+        html += '</div>';
+        
+        // Добавляем дни недели
+        html += '<div class="row g-0 text-center mb-2">';
+        ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => {
+            html += `<div class="col"><small class="text-muted">${d}</small></div>`;
+        });
+        html += '</div>';
+
+        // Начинаем календарную сетку
+        html += '<div class="row g-0">';
+        
+        // Получаем день недели для первого дня месяца (0 = воскресенье, 6 = суббота)
+        let dayOfWeek = (firstDay.getDay() + 6) % 7; // Преобразуем в формат Пн=0, Вс=6
+        
+        // Добавляем пустые ячейки в начале месяца
+        for (let i = 0; i < dayOfWeek; i++) {
+            html += '<div class="col"><div class="p-2"></div></div>';
+        }
+
+        // Добавляем дни месяца
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const date = new Date(year, month, day);
+            const isSelected = selectedDays.has(dateStr);
+            const isPast = date < new Date(new Date().setHours(0,0,0,0));
+            
+            // Начинаем новую строку каждую неделю
+            if ((dayOfWeek + day - 1) % 7 === 0 && day !== 1) {
+                html += '</div><div class="row g-0">';
+            }
+
+            html += `<div class="col">
+                <div class="calendar-day-selectable ${isSelected ? 'selected' : ''} 
+                    ${isPast ? 'disabled' : ''}" 
+                    data-date="${dateStr}" 
+                    ${isPast ? 'style="pointer-events:none;opacity:0.5;"' : ''}>
+                    ${day}
+                </div>
+            </div>`;
+        }
+
+        // Добавляем пустые ячейки в конце месяца
+        const remainingCells = 7 - ((dayOfWeek + lastDay.getDate()) % 7);
+        if (remainingCells < 7) {
+            for (let i = 0; i < remainingCells; i++) {
+                html += '<div class="col"><div class="p-2"></div></div>';
+            }
+        }
+
+        html += '</div>';
+        document.getElementById('calendar-days').innerHTML = html;
+
+        // Добавляем обработчики событий для кнопок навигации
+        document.getElementById('prevMonthBtn').onclick = () => {
+            if (currentMonth === 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else {
+                currentMonth--;
+            }
+            renderCalendar(currentMonth, currentYear);
+        };
+
+        document.getElementById('nextMonthBtn').onclick = () => {
+            if (currentMonth === 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else {
+                currentMonth++;
+            }
+            renderCalendar(currentMonth, currentYear);
+        };
+
+        // Добавляем обработчики для выбора дней
+        document.querySelectorAll('.calendar-day-selectable:not(.disabled)').forEach(el => {
+            el.onclick = function() {
+                const date = this.dataset.date;
+                if (selectedDays.has(date)) {
+                    selectedDays.delete(date);
+                    this.classList.remove('selected');
+                } else {
+                    selectedDays.add(date);
+                    this.classList.add('selected');
+                }
+                updateSelectedDatesDisplay();
+            };
+        });
+    }
+
+    document.getElementById('generateSlotsForm').onsubmit = function(e) {
+        if (selectedDays.size === 0) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите хотя бы один день');
+            return false;
+        }
+        document.getElementById('selectedDatesInput').value = Array.from(selectedDays).join(',');
+    };
+
+    // Добавляем обработчик для обновления отображения выбранных дат
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.calendar-day-selectable')) {
+            setTimeout(updateSelectedDatesDisplay, 0);
+        }
+    });
+
+    renderCalendar(currentMonth, currentYear);
+});
+</script>
+{% endblock %}

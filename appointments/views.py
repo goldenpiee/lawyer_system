@@ -140,12 +140,13 @@ def create_slot_from_day(request):
             data = json.loads(request.body)
             date_str = data.get('date')
             start_time_str = data.get('startTime')
-            end_time_str = data.get('endTime')
 
             # Combine date and time strings
             date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
             start_time_obj = datetime.strptime(start_time_str, '%H:%M').time()
-            end_time_obj = datetime.strptime(end_time_str, '%H:%M').time()
+
+            # Calculate end time (30 mins after start)
+            end_time_obj = (datetime.combine(date_obj, start_time_obj) + timedelta(minutes=30)).time()
 
             # Используем локальную временную зону (например, Europe/Moscow)
             tz = get_current_timezone()
@@ -161,12 +162,12 @@ def create_slot_from_day(request):
                 end_time=end_time,
                 is_booked=False
             )
-
-            return HttpResponse("OK")
+            
+            messages.success(request, 'Слот успешно создан')
+            return JsonResponse({'status': 'success'})
         except Exception as e:
-            return HttpResponse(str(e), status=500)
-    else:
-        return HttpResponse("Invalid method", status=405)
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid method'}, status=405)
 
 @login_required
 @user_passes_test(lambda u: hasattr(u, 'lawyerprofile'))
@@ -234,10 +235,6 @@ def get_slots_api(request):
 
 @login_required
 def lawyer_dashboard(request):
-    print(f"User: {request.user.username}")  # Debugging
-    print(f"Is staff: {request.user.is_staff}")  # Debugging
-    print(f"Lawyer profile exists: {hasattr(request.user, 'lawyerprofile')}")  # Debugging
-    
     if not request.user.is_staff:
         messages.error(request, "Доступ запрещен. Вы не являетесь юристом.")
         return redirect('home')
@@ -249,21 +246,26 @@ def lawyer_dashboard(request):
         'rejected': 'Rejected'
     }
     
-    appointments = Appointment.objects.select_related('client', 'client__lawyerprofile')
-    pending_count = appointments.filter(status='Pending').count()
-    approved_count = appointments.filter(status='Approved').count()
-    rejected_count = appointments.filter(status='Rejected').count()
+    # Filter appointments by current lawyer for all queries
+    base_appointments = Appointment.objects.select_related('client', 'client__lawyerprofile').filter(lawyer=request.user)
+    
+    # Get counts for status badges
+    pending_count = base_appointments.filter(status='Pending').count()
+    approved_count = base_appointments.filter(status='Approved').count()
+    rejected_count = base_appointments.filter(status='Rejected').count()
     
     current_status = status_map.get(status, 'pending')
-    appointments = appointments.filter(status=current_status).order_by('-date')
+    appointments = base_appointments.filter(status=current_status).order_by('-date')
     
-    return render(request, 'appointments/lawyer_dashboard.html', {
+    context = {
         'appointments': appointments,
         'status': status,
         'pending_count': pending_count,
         'approved_count': approved_count,
-        'rejected_count': rejected_count
-    })
+        'rejected_count': rejected_count,
+    }
+    
+    return render(request, 'appointments/lawyer_dashboard.html', context)
 
 @login_required
 def update_appointment_status(request, appointment_id):
@@ -369,3 +371,49 @@ def generate_slots_view(request):
         generate_slots(selected_weekdays=weekdays)
         context['success'] = True
     return render(request, 'appointments/generate_slots.html', context)
+
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: hasattr(u, 'lawyerprofile'))
+def generate_slots_days(request):
+    """
+    Генерирует слоты на выбранные дни с указанным временем.
+    """
+    context = {}
+    if request.method == 'POST':
+        selected_dates = request.POST.get('selected_dates', '')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        if selected_dates and start_time and end_time:
+            dates = selected_dates.split(',')
+            slots_created = 0
+            for date_str in dates:
+                try:
+                    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+                    start_dt = timezone.make_aware(datetime.combine(date_obj, datetime.strptime(start_time, "%H:%M").time()))
+                    end_dt = timezone.make_aware(datetime.combine(date_obj, datetime.strptime(end_time, "%H:%M").time()))
+                    current = start_dt
+                    while current < end_dt:
+                        slot_end = current + timedelta(minutes=30)
+                        # Avoid duplicates
+                        from appointments.models import CalendarSlot
+                        if not CalendarSlot.objects.filter(
+                            lawyer=request.user,
+                            start_time=current,
+                            end_time=slot_end
+                        ).exists():
+                            CalendarSlot.objects.create(
+                                lawyer=request.user,
+                                start_time=current,
+                                end_time=slot_end,
+                                is_booked=False
+                            )
+                            slots_created += 1
+                        current = slot_end
+                except Exception as e:
+                    continue
+            context['success'] = True
+            context['slots_created'] = slots_created
+        else:
+            context['error'] = "Не выбраны даты или не указано время."
+    return render(request, 'appointments/generate_slots_days.html', context)

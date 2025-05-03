@@ -136,3 +136,62 @@ class AppointmentsAdvancedTest(TestCase):
         except Exception as e:
             print("  └─ ❌ Ошибка:", e)
             raise
+
+    def test_lawyer_sees_only_own_appointments(self):
+        print("\n[ТЕСТ] AppointmentsAdvancedTest: Проверка видимости подтвержденных записей только для назначенного юриста")
+        try:
+            # Create another lawyer
+            another_lawyer = get_user_model().objects.create_user(
+                email='another_lawyer@test.com',
+                full_name='Another Lawyer',
+                phone='+79991234567',
+                password='pass123',
+                is_staff=True
+            )
+            LawyerProfile.objects.create(user=another_lawyer, specialization='BANKRUPTCY')
+            
+            # Create appointments for both lawyers
+            slot1 = CalendarSlot.objects.create(
+                lawyer=self.lawyer_user,
+                start_time=timezone.now() + timezone.timedelta(days=1),
+                end_time=timezone.now() + timezone.timedelta(days=1, hours=1),
+                is_booked=True
+            )
+            slot2 = CalendarSlot.objects.create(
+                lawyer=another_lawyer,
+                start_time=timezone.now() + timezone.timedelta(days=2),
+                end_time=timezone.now() + timezone.timedelta(days=2, hours=1),
+                is_booked=True
+            )
+            
+            appointment1 = Appointment.objects.create(
+                client=self.client_user,
+                lawyer=self.lawyer_user,
+                date=slot1.start_time,
+                status='Approved'
+            )
+            appointment2 = Appointment.objects.create(
+                client=self.client_user,
+                lawyer=another_lawyer,
+                date=slot2.start_time,
+                status='Approved'
+            )
+            
+            # Test first lawyer's view
+            self.client.login(email='lawyer@test.com', password='pass123')
+            response = self.client.get(reverse('appointments:lawyer_dashboard') + '?status=approved')
+            appointments = response.context['appointments']
+            self.assertEqual(len(appointments), 1)
+            self.assertEqual(appointments[0].id, appointment1.id)
+            
+            # Test second lawyer's view
+            self.client.login(email='another_lawyer@test.com', password='pass123')
+            response = self.client.get(reverse('appointments:lawyer_dashboard') + '?status=approved')
+            appointments = response.context['appointments']
+            self.assertEqual(len(appointments), 1)
+            self.assertEqual(appointments[0].id, appointment2.id)
+            
+            print("  └─ ✅ Тест пройден: каждый юрист видит только свои подтвержденные записи")
+        except Exception as e:
+            print("  └─ ❌ Ошибка:", e)
+            raise

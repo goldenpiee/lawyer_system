@@ -16,4 +16,5 @@ urlpatterns = [
     path('clear_rejected/', views.clear_rejected_appointments, name='clear_rejected'),
     path('generate-slots/', generate_slots_view, name='generate_slots'),
     path('clear-all-slots/', views.clear_all_slots, name='clear_all_slots'),
+    path('generate-slots-days/', views.generate_slots_days, name='generate_slots_days'),
 ]
