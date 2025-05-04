@@ -156,17 +156,23 @@ def create_slot_from_day(request):
             end_time = make_aware(end_dt_local, timezone=tz)
 
             # Create the CalendarSlot
-            CalendarSlot.objects.create(
+            slot = CalendarSlot.objects.create(
                 lawyer=request.user,
                 start_time=start_time,
                 end_time=end_time,
                 is_booked=False
             )
             
-            messages.success(request, 'Слот успешно создан')
-            return JsonResponse({'status': 'success'})
+            # Явно возвращаем сообщение
+            return JsonResponse({
+                'status': 'success',
+                'message': f'Слот успешно создан на {start_time.strftime("%d.%m.%Y %H:%M")}'
+            })
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            return JsonResponse({
+                'status': 'error',
+                'error': f'Ошибка при создании слота: {str(e)}'
+            }, status=500)
     return JsonResponse({'error': 'Invalid method'}, status=405)
 
 @login_required

@@ -1,18 +1,239 @@
+/* styles.css */
 body {
-    position: relative;
-    z-index: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: #2c3e50;
+    background-color: #f8f9fa;
+    padding-bottom: 3rem;
+    padding-top: 0;
+    
 }
 
-body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('lawyer_system/static/images/123.avif') no-repeat center center;
-    background-size: cover;
+/* --- Navbar --- */
+.navbar {   
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem; 
+}
+.navbar-brand {
+    font-size: 1.3rem !important;
+    position: sticky;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.navbar-brand:hover {
+    transform: translateY(-1px);
+}
+
+.navbar-brand:hover i {
     transform: scale(1.1);
-    filter: blur(8px);
-    z-index: -1;
+}
+
+.navbar-brand i {
+    transition: transform 0.2s ease;
+    font-size: 1.4rem;
+}
+
+.navbar-brand:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: #fff;
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+}
+
+.navbar-brand:hover:after {
+    transform: scaleX(1);
+}
+
+/* --- Buttons --- */
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn .bi {
+    vertical-align: middle;
+    position: relative;
+    top: -1px; /* Подстройка иконки в кнопке */
+}
+
+/* --- Links & General Interactivity --- */
+a, button, input, select, textarea {
+    transition: all 0.2s ease-in-out;
+}
+
+
+/* --- Messages --- */
+.messages-container {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.message-box {
+    width: auto;
+    min-width: 300px;
+    max-width: 600px;
+    margin-bottom: 10px;
+    text-align: left;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.2rem;
+    border-left-width: 5px;
+    border-radius: 0.375rem;
+}
+
+.message-box::before {
+    font-family: 'bootstrap-icons';
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+
+.message-box .message-text {
+    font-weight: 500;
+    font-size: 1rem;
+    flex-grow: 1;
+}
+
+
+.fade-out {
+    opacity: 0 !important;
+    transition: opacity 0.6s ease-out;
+}
+
+@media (max-width: 576px) {
+    .message-box {
+        min-width: 250px;
+        max-width: 90vw;
+    }
+}
+
+/* --- Cards --- */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Легкая тень (остается) */
+    /* border: none; */ /* Закомментируйте или удалите эту строку */
+    border: 1px solid #dee2e6; /* <<< ВОТ ЭТА СТРОКА ВОЗВРАЩАЕТ ОБВОДКУ */
+    border-radius: 0.375rem;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease-in-out;
+    overflow: hidden; /* Оставляем, чтобы контент не вылезал за скругленные углы */
+}
+
+/* Остальные стили .card:hover, .card-header, .card-body остаются без изменений */
+
+.card:hover {
+     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1); /* Тень при наведении */
+     transform: translateY(-3px); /* Подъем карточки */
+     /* Можно также изменить цвет границы при наведении, если хотите */
+     /* border-color: var(--bs-primary); */
+}
+
+.card-header {
+    font-weight: 600;
+    padding: 0.75rem 1.25rem;
+    background-color: #f8f9fa; /* Светлый фон для единообразия или уберите для наследования */
+    /* Граница снизу заголовка может быть не нужна, если есть общая граница карточки */
+    /* border-bottom: 1px solid #dee2e6; */ /* Эту строку можно убрать, если есть общая граница */
+    /* НО! Если общая граница очень светлая, нижняя граница хедера может быть полезна */
+    border-bottom: 1px solid #dee2e6; /* Оставим пока, чтобы отделить хедер */
+
+}
+
+/* Если используется темный заголовок для некоторых карточек (как на скриншоте) */
+.card-header.bg-dark, .card-header.bg-primary, .card-header.bg-secondary { /* Добавьте нужные фоны */
+    color: white;
+    border-bottom: none; /* Убираем границу для темных хедеров */
+}
+
+.card-body {
+     padding: 1.5rem;
+}
+
+/* --- Page Content Specific Styles --- */
+.container.mt-4 {
+    margin-bottom: 3rem;
+}
+
+/* Классы для заголовков на страницах (применять в шаблонах контента) */
+.page-title {
+     margin-bottom: 0.5rem;
+     font-weight: 300; /* Пример: сделать главный заголовок легче */
+     font-size: 2.5rem; /* Пример: сделать крупнее */
+     text-align: center;
+}
+.page-subtitle {
+     margin-bottom: 2.5rem; /* Увеличен отступ до карточек */
+     color: #6c757d;
+     font-size: 1.25rem;
+     font-weight: 400;
+     text-align: center;
+}
+
+/* Стили для элементов списка с иконками (использовать с d-flex в HTML) */
+.list-item-icon { /* Пример класса для обертки иконки + текста */
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem; /* Отступ между элементами */
+}
+.list-item-icon .bi {
+    margin-right: 0.75rem; /* Отступ иконки */
+    font-size: 1.2rem; /* Размер иконки */
+    flex-shrink: 0;
+    color: var(--bs-primary); /* Пример: окрасить иконки в основной цвет */
+}
+.list-item-icon span {
+    line-height: 1.5; /* Улучшение читаемости текста рядом с иконкой */
+}
+/* --- Bell Shake Animation --- */
+@keyframes bell-shake {
+    0% { transform: rotate(0); }
+    15% { transform: rotate(-15deg); }
+    30% { transform: rotate(10deg); }
+    45% { transform: rotate(-10deg); }
+    60% { transform: rotate(6deg); }
+    75% { transform: rotate(-4deg); }
+    100% { transform: rotate(0); }
+}
+
+/* Ссылка, содержащая колокольчик */
+.notification-link {
+    cursor: pointer;
+    display: inline-block; /* Чтобы ссылка реагировала на hover корректно */
+    /* Убрали text-decoration из HTML, оставим здесь для надежности */
+    text-decoration: none;
+}
+
+/* Стили для самой иконки внутри ссылки */
+.notification-link .bi-bell-fill {
+    display: inline-block; /* ВАЖНО: для transform */
+    transform-origin: top center; /* Точка вращения */
+    transition: transform 0.1s ease-in-out; /* Плавность для неанимационных transform */
+}
+
+/* Применение анимации при наведении/фокусе на ССЫЛКУ */
+.notification-link:hover .bi-bell-fill,
+.notification-link:focus .bi-bell-fill {
+    animation: bell-shake 0.7s cubic-bezier(.36,.07,.19,.97) both; /* Добавил easing */
+    /* 'both' сохраняет состояние последнего кадра после анимации,
+       хотя здесь он заканчивается на rotate(0), так что не критично */
 }

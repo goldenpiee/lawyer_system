@@ -1,0 +1,404 @@
+/* appointments/static/appointments/css/calendar.css */
+
+/* --- Общие Стили и Переменные (Опционально) --- */
+:root {
+    --calendar-border-color: #dee2e6;       /* Цвет границы по умолчанию */
+    --calendar-bg-light: #f8f9fa;         /* Светлый фон (дни недели, группы времени) */
+    --calendar-day-hover-bg: #e9ecef;      /* Фон дня при наведении */
+    --calendar-available-bg: rgba(var(--bs-success-rgb), 0.1); /* Фон доступного дня */
+    --calendar-available-border: var(--bs-success); /* Граница доступного дня */
+    --calendar-available-hover-bg: rgba(var(--bs-success-rgb), 0.2);
+    --calendar-available-hover-border: var(--bs-success-dark);
+    --calendar-selected-bg: var(--bs-primary);       /* Фон выбранного дня/времени */
+    --calendar-selected-border: var(--bs-primary-dark); /* Граница выбранного */
+    --calendar-selected-color: #fff;             /* Цвет текста выбранного */
+    --calendar-today-border: var(--bs-warning);      /* Граница сегодняшнего дня */
+    --calendar-past-bg: #f5f5f5;           /* Фон прошедшего дня */
+    --calendar-past-color: #adb5bd;        /* Цвет текста прошедшего дня */
+    --calendar-header-color: var(--bs-primary);
+    --calendar-accent-shadow: rgba(0, 0, 0, 0.1); /* Тень для интерактивных элементов */
+}
+
+/* --- Контейнер Календаря --- */
+.calendar-container,
+.container.calendar-page {
+    max-width: 1200px; /* Увеличено с 950px */
+    margin: 2rem auto;
+    padding: 2rem; /* Умеренный padding */
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 25px rgba(44, 62, 80, 0.08); /* Мягкая, чуть заметнее тень */
+    border: 1px solid var(--calendar-border-color);
+}
+
+/* --- Шапка Календаря --- */
+.calendar-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem !important; /* Увеличенный отступ */
+}
+#month-header {
+    text-align: center;
+    color: var(--calendar-header-color);
+    margin-bottom: 0; /* Убираем нижний отступ, т.к. есть у родителя */
+    font-size: 2rem;
+    font-weight: 500;
+    flex-grow: 1; /* Позволяем занимать пространство */
+}
+.calendar-navigation .btn { /* Кнопки < > */
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem; /* Чуть больше padding */
+    flex-shrink: 0; /* Не сжимать кнопки */
+}
+
+.lawyer-controls {
+    margin-bottom: 2rem !important;
+    margin-top: 1rem;
+    text-align: center;
+    padding-bottom: 1.5rem; /* Добавим отступ снизу */
+    border-bottom: 1px solid var(--calendar-border-color); /* Разделитель */
+}
+.lawyer-controls .btn {
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem; /* Увеличим padding */
+    margin: 0 0.3rem; /* Небольшой отступ между кнопками */
+}
+
+/* Дни недели */
+.weekdays-row {
+    background-color: var(--calendar-bg-light);
+    border-radius: 8px;
+    padding: 0.8rem 0;
+    font-size: 0.9rem; /* Чуть меньше для контраста с днями */
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem !important; /* Уменьшим отступ перед сеткой */
+    text-align: center;
+    border: 1px solid var(--calendar-border-color);
+}
+
+/* --- Сетка Календаря --- */
+#calendar-grid {
+    margin-bottom: 2rem; /* Отступ после сетки */
+}
+#calendar-grid .col {
+   padding: 4px !important; /* Отступы между ячейками (аналог g-2/g-3) */
+}
+
+/* Отдельный день */
+.calendar-day {
+    min-height: 100px; /* Уменьшено со 120px */
+    max-width: 140px; /* Добавлено ограничение ширины */
+    margin: 0 auto; /* Центрирование */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); /* Плавный переход */
+    cursor: pointer;
+    background: #fff; /* Белый фон по умолчанию */
+    border: 1px solid var(--calendar-border-color);
+    position: relative;
+    font-size: 1.2rem; /* Размер цифры */
+    font-weight: 500;
+    color: #343a40;
+    overflow: hidden; /* Скрыть вылезающие элементы */
+}
+.calendar-day span {
+    z-index: 1;
+}
+.calendar-day.empty {
+    background-color: var(--calendar-bg-light);
+    border: 1px solid rgba(222, 226, 230, 0.6); /* Subtle border for empty days */
+    cursor: default;
+    box-shadow: none;
+    opacity: 0.7; /* Slightly fade out empty days */
+}
+.calendar-day:not(.empty):not(.past-day):hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 16px var(--calendar-accent-shadow);
+    border-color: #adb5bd;
+    z-index: 10;
+}
+
+/* Состояния дней */
+.calendar-day.available-day {
+    background: var(--calendar-available-bg);
+    border: 2px solid var(--calendar-available-border);
+    color: var(--bs-success-dark);
+}
+.calendar-day.available-day:hover {
+    background: var(--calendar-available-hover-bg);
+    border-color: var(--calendar-available-hover-border);
+}
+
+.calendar-day.selected-day {
+    background: var(--calendar-selected-bg) !important;
+    border-color: var(--calendar-selected-border) !important;
+    color: var(--calendar-selected-color) !important;
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 14px rgba(var(--bs-primary-rgb), 0.3);
+    z-index: 5;
+}
+
+.calendar-day.past-day {
+    background: var(--calendar-past-bg) !important;
+    color: var(--calendar-past-color) !important;
+    cursor: not-allowed;
+    opacity: 0.75;
+    border-color: var(--calendar-border-color);
+}
+.calendar-day.past-day:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.calendar-day.today {
+    border-width: 2px;
+    border-color: var(--calendar-today-border);
+    font-weight: 700; /* Жирный шрифт для сегодня */
+}
+.calendar-day.today.selected-day {
+    border-color: var(--calendar-selected-border) !important;
+}
+
+.calendar-day.no-slots-day {
+    border: 1px dashed var(--calendar-border-color);
+    background-color: #fff;
+    color: var(--calendar-past-color);
+}
+
+.calendar-day.no-slots-day:hover {
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
+}
+
+/* Индикатор слотов */
+.slot-indicator {
+    width: 9px; /* Чуть меньше */
+    height: 9px;
+    background-color: var(--bs-success);
+    border-radius: 50%;
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 0;
+    box-shadow: 0 0 3px rgba(var(--bs-success-rgb), 0.5); /* Легкое свечение */
+}
+.selected-day .slot-indicator {
+    background-color: white;
+    box-shadow: none;
+}
+
+/* --- Блок выбора времени --- */
+#time-slots.time-slots-card {
+    background: #fff; /* Белый фон */
+    border: 1px solid var(--calendar-border-color);
+    border-radius: 12px;
+    padding: 1.5rem 2rem; /* Увеличенный padding */
+    margin-top: 2.5rem;
+    animation: fadeIn 0.4s ease-out;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0 6px 25px rgba(44, 62, 80, 0.08);
+}
+
+/* Заголовок выбранной даты */
+#selected-date.selected-date-header {
+    color: #343a40;
+    text-transform: capitalize;
+    margin-bottom: 1.5rem; /* Больше отступ */
+    font-size: 1.4rem; /* Больше шрифт */
+    font-weight: 500;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1.2rem;
+}
+/* Надпись "Выберите время" */
+#choose-time-label {
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--bs-secondary); /* Используем вторичный цвет */
+    margin-bottom: 1.5rem !important;
+}
+#choose-time-label i { /* Иконка часов */
+    margin-right: 0.3rem;
+    position: relative;
+    top: -1px;
+}
+
+/* Контейнер для групп времени */
+.time-group {
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.time-header {
+    display: none; /* Скрываем заголовки часа */
+}
+
+/* Сетка для кнопок времени */
+.time-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Немного шире кнопки */
+    gap: 0.8rem; /* Больше отступ */
+}
+
+/* Стилизация кнопки выбора времени */
+.time-slot-btn {
+    background: #fff;
+    /* --- ИЗМЕНЕНИЕ ЗДЕСЬ --- */
+    border: 1px solid var(--bs-primary); /* Всегда видимая рамка основного цвета */
+    /* ----------------------- */
+    border-radius: 6px;
+    color: var(--bs-primary); /* Цвет текста тоже основной */
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.7rem 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease-in-out;
+    outline: none;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+}
+
+.time-slot-btn:hover, .time-slot-btn:focus {
+    background: rgba(var(--bs-primary-rgb), 0.08); /* Фон меняется */
+    color: var(--bs-primary-dark);
+    border-color: var(--bs-primary); /* Рамка остается того же цвета */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(var(--bs-primary-rgb), 0.1);
+    z-index: 2;
+}
+
+.time-slot-btn.active { /* Выбранная кнопка */
+    background: var(--calendar-selected-bg) !important; /* Цвет фона выбранного (primary) */
+    color: var(--calendar-selected-color) !important; /* Цвет текста выбранного (white) */
+    border-color: var(--calendar-selected-border) !important; /* Рамка становится темнее (primary-dark) */
+    font-weight: 600;
+    transform: scale(1.05);
+    box-shadow: 0 5px 12px rgba(var(--bs-primary-rgb), 0.2);
+    z-index: 3;
+}
+
+
+/* --- Кнопки Действий (Записаться/Удалить) --- */
+#confirm-btn {
+    font-size: 1.05rem;
+    padding: 0.8rem 1.5rem; /* Крупнее */
+    margin-top: 1.5rem;
+    font-weight: 500;
+    transition: all 0.25s ease; /* Плавный переход для кнопки */
+}
+#confirm-btn:hover {
+    transform: translateY(-3px); /* Более заметный подъем */
+    box-shadow: 0 6px 12px rgba(var(--bs-success-rgb), 0.25); /* Тень под цвет кнопки (пример для success) */
+}
+#confirm-btn.btn-danger:hover { /* Тень для danger */
+     box-shadow: 0 6px 12px rgba(var(--bs-danger-rgb), 0.25);
+}
+#add-time-btn { /* Кнопка "Добавить время" */
+     font-size: 0.95rem;
+     padding: 0.7rem 1.3rem;
+}
+
+
+/* --- Форма создания слота --- */
+#createSlotForm.create-slot-card {
+    max-width: 450px;
+    margin: 2rem auto; /* Больше отступ сверху/снизу */
+    box-shadow: 0 6px 25px rgba(44, 62, 80, 0.08);
+    border: 1px solid var(--calendar-border-color);
+    border-radius: 12px; /* Согласованный радиус */
+}
+#createSlotForm .card-body {
+    padding: 2rem; /* Больше padding */
+}
+#createSlotForm .card-title {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: #343a40;
+}
+#createSlotForm label {
+    font-weight: 500;
+    margin-bottom: 0.5rem !important;
+    font-size: 0.9rem;
+    color: #495057;
+}
+#createSlotForm .form-select {
+    font-size: 1rem;
+    padding: 0.6rem 1rem; /* Увеличенный padding */
+    border-color: var(--calendar-border-color);
+}
+#createSlotForm .form-select:focus {
+     border-color: var(--bs-primary);
+     box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+#createSlotForm .btn { /* Кнопки Отмена/Создать */
+    font-size: 0.95rem;
+    padding: 0.65rem 1.2rem;
+}
+
+
+/* --- Адаптивность --- */
+@media (max-width: 1200px) {
+     .calendar-day { 
+         min-height: 90px; /* Уменьшено со 110px */
+         max-width: 120px; /* Добавлено */
+         font-size: 1.1rem; 
+     }
+     .weekdays-row { font-size: 0.95rem; }
+     #month-header { font-size: 1.8rem; }
+}
+@media (max-width: 992px) {
+     .calendar-day { 
+         min-height: 80px; /* Уменьшено с 95px */
+         max-width: 100px; /* Добавлено */
+         font-size: 1rem; 
+     }
+     .weekdays-row { font-size: 0.9rem; padding: 0.7rem 0; }
+     .slot-indicator { width: 8px; height: 8px; bottom: 9px;}
+     .time-slots-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 0.6rem;}
+     .time-slot-btn { font-size: 0.9rem; padding: 0.6rem 0.4rem; }
+     .calendar-container, .container.calendar-page { padding: 1.5rem; }
+}
+@media (max-width: 768px) {
+     #month-header { font-size: 1.6rem; }
+     .calendar-day { min-height: 80px; font-size: 0.9rem; }
+     .weekdays-row { font-size: 0.85rem; padding: 0.6rem 0; }
+     .slot-indicator { width: 7px; height: 7px; bottom: 8px;}
+     .time-slots-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+     .time-slot-btn { font-size: 0.85rem; padding: 0.5rem 0.3rem; }
+     #time-slots.time-slots-card { padding: 1.2rem; }
+     #selected-date.selected-date-header { font-size: 1.2rem; }
+     .calendar-container, .container.calendar-page { padding: 1rem; border-radius: 8px;}
+     #createSlotForm.create-slot-card { max-width: 95%; }
+     #createSlotForm .card-body { padding: 1.5rem; }
+}
+@media (max-width: 576px) {
+     #month-header { font-size: 1.4rem; }
+     .calendar-day { min-height: 65px; font-size: 0.85rem; border-radius: 6px;}
+     .weekdays-row { font-size: 0.8rem; padding: 0.5rem 0; border-radius: 6px;}
+     .slot-indicator { width: 6px; height: 6px; bottom: 7px;}
+     .time-slots-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; } /* 3 колонки на мобильных */
+     .time-slot-btn { font-size: 0.8rem; padding: 0.4rem 0.2rem; border-radius: 4px;}
+     #selected-date.selected-date-header { font-size: 1.1rem; }
+     #confirm-btn { font-size: 0.95rem; padding: 0.6rem 1rem; }
+     .calendar-container, .container.calendar-page { padding: 0.8rem; border-radius: 6px;}
+     #time-slots.time-slots-card { padding: 1rem; border-radius: 8px;}
+     .time-group { padding: 0.8rem; }
+     .time-header { font-size: 0.85rem; margin-bottom: 0.7rem; }
+     #createSlotForm .card-body { padding: 1.2rem; }
+}
+
+/* Анимация появления */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
