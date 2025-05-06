@@ -4,80 +4,134 @@
 <div class="container mt-4">
     <div class="card shadow">
         <div class="card-body">
-            <h2 class="card-title mb-4">Генерация слотов</h2>
-            
+            <h2 class="card-title mb-4 text-center">Генерация слотов по дням</h2> {# Центрирование заголовка #}
+
             <div class="mb-3">
-                <a href="{% url 'appointments:calendar' %}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Вернуться к календарю
+                {# Используем Font Awesome или Bootstrap Icons, если подключены #}
+                <a href="{% url 'appointments:calendar' %}" class="btn btn-secondary btn-sm"> {# Уменьшил кнопку #}
+                    <i class="bi bi-arrow-left me-1"></i> Вернуться к календарю {# Пример иконки Bootstrap #}
                 </a>
             </div>
-            
+
             {% if success %}
-                <div class="alert alert-success">
+                {# Используем showTemporaryMessage, если она глобальна #}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("Успешно создано слотов: {{ slots_created }}", "success");
+                        } else {
+                            // Показываем стандартный alert, если функции нет
+                            const successAlert = document.createElement('div');
+                            successAlert.className = 'alert alert-success alert-dismissible fade show';
+                            successAlert.role = 'alert';
+                            successAlert.innerHTML = `Успешно создано слотов: {{ slots_created }} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                            document.querySelector('.card-body').insertBefore(successAlert, document.querySelector('.row'));
+                        }
+                    });
+                </script>
+                {# Можно удалить этот div, если используется showTemporaryMessage #}
+                <!-- <div class="alert alert-success">
                     Успешно создано слотов: {{ slots_created }}
-                </div>
+                </div> -->
             {% endif %}
             {% if error %}
-                <div class="alert alert-danger">
+                 {# Используем showTemporaryMessage, если она глобальна #}
+                 <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("{{ error|escapejs }}", "danger");
+                        } else {
+                            // Показываем стандартный alert, если функции нет
+                            const errorAlert = document.createElement('div');
+                            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+                            errorAlert.role = 'alert';
+                            errorAlert.innerHTML = `{{ error|escapejs }} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                            document.querySelector('.card-body').insertBefore(errorAlert, document.querySelector('.row'));
+                        }
+                    });
+                </script>
+                 {# Можно удалить этот div, если используется showTemporaryMessage #}
+                <!-- <div class="alert alert-danger">
                     {{ error }}
-                </div>
+                </div> -->
             {% endif %}
 
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="calendar-container bg-white p-3 rounded shadow-sm mb-3">
+            <div class="row g-lg-4 g-md-3 g-2"> {# Адаптивные отступы между колонками #}
+                {# Колонка Календаря #}
+                <div class="col-lg-7 col-md-6 order-md-1 order-2"> {# Уменьшил колонку календаря, порядок на мобильных #}
+                    <div class="calendar-container bg-white p-3 rounded shadow-sm mb-3 mb-md-0"> {# Убрал mb-3 на больших экранах #}
                         <div id="calendar-days"></div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                {# Колонка Формы #}
+                 <div class="col-lg-5 col-md-6 order-md-2 order-1"> {# Увеличил колонку формы, порядок на мобильных #}
                     <form id="generateSlotsForm" method="post" class="bg-white p-3 rounded shadow-sm">
                         {% csrf_token %}
                         <input type="hidden" name="selected_dates" id="selectedDatesInput">
-                        
-                        <div class="form-group mb-4">
+
+                        <div class="form-group mb-3"> {# Уменьшил отступ #}
                             <label class="form-label fw-bold">Выбранные дни:</label>
-                            <div id="selectedDatesDisplay" class="selected-dates p-2 rounded bg-light">
-                                <em class="text-muted">Нет выбранных дней</em>
+                             <div id="selectedDatesDisplay" class="selected-dates p-2 rounded bg-light border"> {# Добавил border #}
+                                <em class="text-muted small">Нет выбранных дней</em> {# Уменьшил текст #}
                             </div>
                         </div>
 
-                        <div class="time-picker mb-4">
-                            <label class="form-label fw-bold">Время работы:</label>
-                            <div class="d-flex gap-3 align-items-center mb-2">
+                        <div class="time-picker mb-3"> {# Уменьшил отступ #}
+                            <label class="form-label fw-bold mb-1">Время работы:</label> {# Уменьшил отступ #}
+                            <div class="d-flex gap-2 align-items-center"> {# Уменьшил gap #}
                                 <div class="flex-grow-1">
-                                    <label class="small text-muted">Начало</label>
-                                    <select name="start_time" class="form-select" required>
-                                        <option value="">Выберите...</option>
+                                    <label for="start_time_select" class="small text-muted">Начало</label>
+                                    <select id="start_time_select" name="start_time" class="form-select form-select-sm" required> {# Уменьшил select #}
+                                        <option value="" selected disabled>--:--</option> {# Улучшил placeholder #}
                                         <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
                                         <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
                                         <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
                                         <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
                                         <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
                                         <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
                                         <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
                                         <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                         <option value="17:30">17:30</option>
                                     </select>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <label class="small text-muted">Конец</label>
-                                    <select name="end_time" class="form-select" required>
-                                        <option value="">Выберите...</option>
+                                    <label for="end_time_select" class="small text-muted">Конец</label>
+                                    <select id="end_time_select" name="end_time" class="form-select form-select-sm" required> {# Уменьшил select #}
+                                        <option value="" selected disabled>--:--</option>
+                                        <option value="09:30">09:30</option>
                                         <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
                                         <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
                                         <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
                                         <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
                                         <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
                                         <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
                                         <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
                                         <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
                                         <option value="18:00">18:00</option>
                                     </select>
                                 </div>
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">
-                            Сгенерировать слоты
+                        <button type="submit" class="btn btn-primary w-100 mt-2"> {# Добавил mt-2 #}
+                            <i class="bi bi-calendar-plus me-1"></i> Сгенерировать слоты
                         </button>
                     </form>
                 </div>
@@ -87,54 +141,143 @@
 </div>
 
 <style>
+/* Стили для мини-календаря выбора дней */
 .calendar-container {
     background: #fff;
-    border-radius: 10px;
-    padding: 20px;
+    border-radius: 8px; /* Уменьшил радиус */
+    padding: 15px; /* Уменьшил padding */
+    border: 1px solid #eee; /* Добавил границу */
 }
 .calendar-day-selectable {
-    padding: 12px 8px;
-    margin: 2px;
-    border-radius: 8px;
+    padding: 10px 5px; /* Уменьшил padding */
+    margin: 1px; /* Уменьшил margin */
+    border-radius: 6px; /* Уменьшил радиус */
     border: 1px solid #e0e0e0;
     background: #fff;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
+    transition: all 0.15s ease-in-out; /* Ускорил анимацию */
+    font-size: 0.85rem; /* Уменьшил шрифт */
 }
 .calendar-day-selectable:hover:not(.disabled) {
     background: #f8f9fa;
-    transform: scale(1.05);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transform: scale(1.03); /* Уменьшил scale */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 .calendar-day-selectable.selected {
-    background: #435ebe;
+    background: var(--bs-primary); /* Используем primary цвет */
     color: white;
-    border-color: #435ebe;
+    border-color: var(--bs-primary-dark);
+    font-weight: 500;
 }
 .calendar-day-selectable.disabled {
     background: #f8f9fa;
     cursor: not-allowed;
+    opacity: 0.6; /* Сделал чуть виднее */
 }
 .calendar-header {
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem; /* Уменьшил отступ */
 }
 .calendar-header h5 {
     text-transform: capitalize;
+    font-size: 1.1rem; /* Уменьшил заголовок */
+    font-weight: 500;
 }
+.calendar-header .btn {
+    padding: 0.2rem 0.5rem; /* Уменьшил кнопки навигации */
+}
+/* Дни недели */
+.calendar-days-header .col {
+    padding: 0.2rem;
+}
+
+/* Сетка */
+#calendar-days .row.g-0 {
+    margin-left: -1px; /* Компенсация margin у ячеек */
+    margin-right: -1px;
+}
+#calendar-days .row.g-0 > .col {
+    padding-left: 1px; /* Уменьшил padding */
+    padding-right: 1px;
+}
+
+/* Форма */
 .selected-dates {
-    min-height: 60px;
-    border: 1px solid #dee2e6;
+    min-height: 50px; /* Уменьшил высоту */
+    max-height: 100px; /* Добавил макс высоту */
+    overflow-y: auto; /* Добавил скролл */
 }
-.time-picker select {
-    font-size: 0.95rem;
-    padding: 8px;
+.selected-dates .badge {
+    font-size: 0.8rem; /* Уменьшил баджи */
+    padding: 0.3em 0.5em;
+}
+.time-picker label.small {
+     margin-bottom: 0.1rem; /* Уменьшил отступ */
+}
+.time-picker .form-select-sm { /* Стили для маленьких селектов */
+    font-size: 0.9rem;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
 }
 .form-select:focus {
-    border-color: #435ebe;
-    box-shadow: 0 0 0 0.25rem rgba(67, 94, 190, 0.25);
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25); /* Стандартный фокус BS */
 }
+
+/* Адаптивность */
+@media (max-width: 767.98px) { /* md breakpoint */
+    .calendar-container {
+        margin-bottom: 1.5rem; /* Добавляем отступ под календарем на мобильных */
+    }
+    .row > [class*="col-md-"] { /* Убираем специфичные отступы колонок md на мобильных */
+        padding-left: var(--bs-gutter-x, 0.75rem);
+        padding-right: var(--bs-gutter-x, 0.75rem);
+    }
+     #generateSlotsForm {
+         padding: 1rem; /* Уменьшаем padding формы */
+     }
+     .calendar-day-selectable {
+        padding: 8px 4px;
+        font-size: 0.8rem;
+     }
+      .selected-dates {
+          min-height: 40px;
+          max-height: 80px;
+      }
+       .time-picker .form-select-sm {
+          font-size: 0.85rem;
+       }
+}
+
+@media (max-width: 575.98px) { /* sm breakpoint */
+    .card-body {
+        padding: 1rem; /* Уменьшаем общий padding карточки */
+    }
+    .calendar-container {
+        padding: 10px;
+    }
+     .calendar-day-selectable {
+        padding: 6px 3px;
+        font-size: 0.75rem;
+        border-radius: 4px;
+     }
+     .calendar-header h5 {
+        font-size: 1rem;
+     }
+      .selected-dates .badge {
+         font-size: 0.75rem;
+     }
+      .time-picker .d-flex {
+          flex-direction: column; /* Ставим селекты друг под другом */
+          gap: 0.5rem !important; /* Уменьшаем вертикальный отступ */
+          align-items: stretch !important; /* Растягиваем по ширине */
+      }
+       #generateSlotsForm .btn {
+          font-size: 0.9rem;
+          padding: 0.5rem 1rem;
+       }
+}
+
 </style>
 
 <script>
@@ -144,106 +287,113 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentYear = today.getFullYear();
     let selectedDays = new Set();
 
+    // --- Обновление отображения выбранных дат ---
     function updateSelectedDatesDisplay() {
         const display = document.getElementById('selectedDatesDisplay');
+        if (!display) return;
+
         if (selectedDays.size === 0) {
-            display.innerHTML = '<em class="text-muted">Нет выбранных дней</em>';
+            display.innerHTML = '<em class="text-muted small">Нет выбранных дней</em>';
         } else {
-            const dates = Array.from(selectedDays).map(dateStr => {
-                const date = new Date(dateStr);
-                return date.toLocaleDateString('ru-RU', {
-                    day: 'numeric',
-                    month: 'long'
-                });
-            }).sort();
-            display.innerHTML = dates.map(d => `<span class="badge bg-primary me-2 mb-2">${d}</span>`).join('');
+            // Преобразуем Set в массив, сортируем даты
+            const datesArray = Array.from(selectedDays);
+            datesArray.sort((a, b) => new Date(a) - new Date(b)); // Сортировка дат
+
+            display.innerHTML = datesArray.map(dateStr => {
+                const date = new Date(dateStr + 'T00:00:00'); // Используем T00:00:00 для избежания сдвига из-за TZ
+                return `<span class="badge bg-primary me-1 mb-1">${date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })}</span>`; // Формат ДД мес
+            }).join('');
         }
+        // Обновляем скрытое поле
+        const input = document.getElementById('selectedDatesInput');
+        if(input) input.value = Array.from(selectedDays).join(',');
     }
 
+    // --- Рендеринг календаря ---
     function renderCalendar(month, year) {
+        const calendarDaysEl = document.getElementById('calendar-days');
+        if (!calendarDaysEl) return;
+
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
-        
-        let html = '<div class="calendar-header d-flex justify-content-between align-items-center mb-3">';
-        html += `<button type="button" class="btn btn-outline-secondary btn-sm" id="prevMonthBtn">❮</button>`;
-        html += `<h5 class="mb-0">${firstDay.toLocaleString('ru-RU', {month: 'long', year: 'numeric'})}</h5>`;
-        html += `<button type="button" class="btn btn-outline-secondary btn-sm" id="nextMonthBtn">❯</button>`;
-        html += '</div>';
-        
-        // Добавляем дни недели
-        html += '<div class="row g-0 text-center mb-2">';
+        const todayDate = new Date(); // Сегодняшняя дата без обнуления времени
+        const todayDateZero = new Date(todayDate.setHours(0,0,0,0)); // Сегодня 00:00
+
+        let html = `<div class="calendar-header d-flex justify-content-between align-items-center mb-2">`; // Уменьшил mb
+        html += `<button type="button" class="btn btn-outline-secondary btn-sm" id="prevMonthBtn">«</button>`; // Изменил символ
+        html += `<h5 class="mb-0 mx-2">${firstDay.toLocaleString('ru-RU', {month: 'long', year: 'numeric'})}</h5>`;
+        html += `<button type="button" class="btn btn-outline-secondary btn-sm" id="nextMonthBtn">»</button>`; // Изменил символ
+        html += `</div>`;
+
+        html += '<div class="row g-0 text-center mb-1 calendar-days-header">'; // Уменьшил mb
         ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => {
-            html += `<div class="col"><small class="text-muted">${d}</small></div>`;
+            html += `<div class="col"><small class="text-muted fw-bold">${d}</small></div>`; // Добавил fw-bold
         });
         html += '</div>';
 
-        // Начинаем календарную сетку
-        html += '<div class="row g-0">';
-        
-        // Получаем день недели для первого дня месяца (0 = воскресенье, 6 = суббота)
-        let dayOfWeek = (firstDay.getDay() + 6) % 7; // Преобразуем в формат Пн=0, Вс=6
-        
-        // Добавляем пустые ячейки в начале месяца
+        html += '<div class="row g-0">'; // Отступы между днями регулируются через margin в .calendar-day-selectable
+
+        let dayOfWeek = (firstDay.getDay() + 6) % 7;
         for (let i = 0; i < dayOfWeek; i++) {
-            html += '<div class="col"><div class="p-2"></div></div>';
+            html += '<div class="col"><div class="p-1"></div></div>'; // Уменьшил p-2
         }
 
-        // Добавляем дни месяца
         for (let day = 1; day <= lastDay.getDate(); day++) {
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const date = new Date(year, month, day);
+            date.setHours(0,0,0,0); // Обнуляем время для сравнения
             const isSelected = selectedDays.has(dateStr);
-            const isPast = date < new Date(new Date().setHours(0,0,0,0));
-            
-            // Начинаем новую строку каждую неделю
+            const isPast = date.getTime() < todayDateZero.getTime(); // Сравниваем с обнуленным сегодня
+
             if ((dayOfWeek + day - 1) % 7 === 0 && day !== 1) {
                 html += '</div><div class="row g-0">';
             }
 
             html += `<div class="col">
-                <div class="calendar-day-selectable ${isSelected ? 'selected' : ''} 
-                    ${isPast ? 'disabled' : ''}" 
-                    data-date="${dateStr}" 
-                    ${isPast ? 'style="pointer-events:none;opacity:0.5;"' : ''}>
+                <div class="calendar-day-selectable ${isSelected ? 'selected' : ''} ${isPast ? 'disabled' : ''}"
+                    data-date="${dateStr}" ${isPast ? 'aria-disabled="true"' : ''}>
                     ${day}
                 </div>
             </div>`;
         }
 
-        // Добавляем пустые ячейки в конце месяца
         const remainingCells = 7 - ((dayOfWeek + lastDay.getDate()) % 7);
         if (remainingCells < 7) {
             for (let i = 0; i < remainingCells; i++) {
-                html += '<div class="col"><div class="p-2"></div></div>';
+                html += '<div class="col"><div class="p-1"></div></div>';
             }
         }
 
         html += '</div>';
-        document.getElementById('calendar-days').innerHTML = html;
+        calendarDaysEl.innerHTML = html;
 
-        // Добавляем обработчики событий для кнопок навигации
-        document.getElementById('prevMonthBtn').onclick = () => {
-            if (currentMonth === 0) {
-                currentMonth = 11;
-                currentYear--;
-            } else {
-                currentMonth--;
+        // --- Обработчики событий календаря ---
+        const prevBtn = document.getElementById('prevMonthBtn');
+        const nextBtn = document.getElementById('nextMonthBtn');
+
+        if (prevBtn) {
+            prevBtn.onclick = () => {
+                if (currentMonth === 0) { currentMonth = 11; currentYear--; }
+                else { currentMonth--; }
+                renderCalendar(currentMonth, currentYear);
+            };
+            // Не даем переходить к прошлым месяцам
+            const prevMonthDate = new Date(year, month - 1, 1);
+             if (prevMonthDate.getFullYear() < todayDate.getFullYear() ||
+                (prevMonthDate.getFullYear() === todayDate.getFullYear() && prevMonthDate.getMonth() < todayDate.getMonth())) {
+                prevBtn.disabled = true;
             }
-            renderCalendar(currentMonth, currentYear);
-        };
+        }
 
-        document.getElementById('nextMonthBtn').onclick = () => {
-            if (currentMonth === 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else {
-                currentMonth++;
-            }
-            renderCalendar(currentMonth, currentYear);
-        };
+        if (nextBtn) {
+            nextBtn.onclick = () => {
+                if (currentMonth === 11) { currentMonth = 0; currentYear++; }
+                else { currentMonth++; }
+                renderCalendar(currentMonth, currentYear);
+            };
+        }
 
-        // Добавляем обработчики для выбора дней
-        document.querySelectorAll('.calendar-day-selectable:not(.disabled)').forEach(el => {
+        calendarDaysEl.querySelectorAll('.calendar-day-selectable:not(.disabled)').forEach(el => {
             el.onclick = function() {
                 const date = this.dataset.date;
                 if (selectedDays.has(date)) {
@@ -253,28 +403,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectedDays.add(date);
                     this.classList.add('selected');
                 }
-                updateSelectedDatesDisplay();
+                updateSelectedDatesDisplay(); // Обновляем отображение и скрытое поле
             };
         });
     }
 
-    document.getElementById('generateSlotsForm').onsubmit = function(e) {
-        if (selectedDays.size === 0) {
-            e.preventDefault();
-            alert('Пожалуйста, выберите хотя бы один день');
-            return false;
-        }
-        document.getElementById('selectedDatesInput').value = Array.from(selectedDays).join(',');
-    };
+    // --- Обработчик отправки формы ---
+    const form = document.getElementById('generateSlotsForm');
+    if (form) {
+        form.onsubmit = function(e) {
+            const input = document.getElementById('selectedDatesInput');
+             if (selectedDays.size === 0) {
+                e.preventDefault();
+                 // Используем showTemporaryMessage, если доступно
+                 if (typeof showTemporaryMessage === 'function') {
+                     showTemporaryMessage('Пожалуйста, выберите хотя бы один день', 'warning');
+                 } else {
+                     alert('Пожалуйста, выберите хотя бы один день');
+                 }
+                return false;
+            }
+            // Значение уже обновляется в updateSelectedDatesDisplay
+            // input.value = Array.from(selectedDays).join(',');
+        };
+    }
 
-    // Добавляем обработчик для обновления отображения выбранных дат
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.calendar-day-selectable')) {
-            setTimeout(updateSelectedDatesDisplay, 0);
-        }
-    });
-
+    // Инициализация
     renderCalendar(currentMonth, currentYear);
+    updateSelectedDatesDisplay(); // Обновить при загрузке (если вдруг даты сохранены)
+
 });
 </script>
 {% endblock %}
