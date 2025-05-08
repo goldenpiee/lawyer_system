@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'goida') # Используйте переменную окружения
-DEBUG = False # Debug mode is now disabled by default
+DEBUG = True # Debug mode is now disabled by default
 
 ALLOWED_HOSTS = ['shuttle.proxy.rlwy.net', 'localhost', '127.0.0.1', 'lawyer-system.onrender.com']   # Укажите свои домены
 
@@ -137,7 +137,7 @@ STATICFILES_DIRS = [
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

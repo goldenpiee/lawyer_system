@@ -14,7 +14,7 @@ from django.db import models
 from django.db.models import Q
 from .forms import (
     RegistrationForm, EmailAuthenticationForm, ProfileEditForm,
-    PasswordResetRequestForm, PasswordResetConfirmForm
+    PasswordResetRequestForm, PasswordResetConfirmForm, ClientDocumentForm
 )
 
 def home(request):
@@ -167,6 +167,52 @@ def password_reset_confirm(request):
     else:
         form = PasswordResetConfirmForm()
     return render(request, 'registration/password_reset_confirm.html', {'form': form})
+@login_required
+def client_profile(request):
+    user = request.user
+    # Получаем историю записей (если это из appointments, то импортировать Appointment)
+    # appointments = user.client_appointments.all().order_by('-date')
+    # Лучше передавать Appointment из приложения appointments, если логика специфична
+    from appointments.models import Appointment # Пример импорта
+    appointments = Appointment.objects.filter(client=user).order_by('-date')
+
+
+    general_documents = user.general_documents.all() # Получаем общие документы клиента
+    general_document_form = ClientDocumentForm()
+
+    # Логика для вычисления can_cancel для каждой записи
+    from django.utils import timezone
+    from datetime import timedelta
+    for appointment in appointments:
+        can_cancel_deadline = appointment.date - timedelta(hours=24)
+        appointment.can_cancel = (appointment.status in ['Pending', 'Approved']) and \
+                                 (timezone.now() < can_cancel_deadline)
+        # Также загружаем документы для каждой записи
+        appointment.attached_documents = appointment.documents.all()
+
+
+    if request.method == 'POST':
+        # Различаем, какая форма была отправлена, если их несколько
+        if 'upload_general_document' in request.POST: # Предполагаем, что у кнопки submit есть name="upload_general_document"
+            general_document_form = ClientDocumentForm(request.POST, request.FILES)
+            if general_document_form.is_valid():
+                doc = general_document_form.save(commit=False)
+                doc.client = user
+                doc.save()
+                messages.success(request, f"Общий документ '{doc.document.name.split('/')[-1]}' успешно загружен.")
+                return redirect('accounts:client_profile') # Перезагружаем страницу
+            else:
+                messages.error(request, "Ошибка при загрузке общего документа.")
+        # Здесь может быть другая логика POST, если есть другие формы на странице
+
+    context = {
+        'user': user,
+        'appointments': appointments,
+        'general_documents': general_documents,
+        'general_document_form': general_document_form,
+        # 'profile_edit_form': ProfileEditForm(instance=user) # Если форма редактирования тоже здесь
+    }
+    return render(request, 'accounts/client_profile.html', context)
 
 class CustomLoginView(LoginView):
     form_class = EmailAuthenticationForm

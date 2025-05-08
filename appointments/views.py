@@ -14,9 +14,12 @@ from django.utils.timezone import make_aware, get_current_timezone
 from django.core.mail import EmailMessage
 from django.conf import settings
 from zoneinfo import ZoneInfo
+from .forms import AppointmentDocumentForm
+from .models import AppointmentDocument
 import json
 from django.views.decorators.csrf import csrf_exempt
-from .utils import generate_slots
+from django.http import HttpResponse, Http404
+
 
 @login_required
 def client_profile(request):
@@ -366,20 +369,6 @@ def clear_rejected_appointments(request):
 
 @csrf_exempt
 @login_required
-def generate_slots_view(request):
-    """
-    Представление для генерации слотов через форму.
-    """
-    context = {}
-    if request.method == 'POST':
-        weekdays = request.POST.getlist('weekdays')
-        weekdays = [int(w) for w in weekdays] if weekdays else [1, 2, 3]
-        generate_slots(selected_weekdays=weekdays)
-        context['success'] = True
-    return render(request, 'appointments/generate_slots.html', context)
-
-@csrf_exempt
-@login_required
 @user_passes_test(lambda u: hasattr(u, 'lawyerprofile'))
 def generate_slots_days(request):
     """
@@ -423,3 +412,132 @@ def generate_slots_days(request):
         else:
             context['error'] = "Не выбраны даты или не указано время."
     return render(request, 'appointments/generate_slots_days.html', context)
+@login_required
+def cancel_appointment_client(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id, client=request.user)
+    
+    # Правило: можно отменить не позднее чем за 24 часа (например)
+    # Убедитесь, что appointment.date осведомлен о временной зоне
+    if appointment.date < timezone.now() + timedelta(hours=24):
+        messages.error(request, "Запись не может быть отменена менее чем за 24 часа до начала.")
+        return redirect('accounts:client_profile')
+
+    if request.method == 'POST':
+        slot = CalendarSlot.objects.filter(
+            lawyer=appointment.lawyer,
+            start_time=appointment.date # Предполагаем, что appointment.date точно соответствует start_time слота
+        ).first()
+
+        if slot:
+            slot.is_booked = False
+            slot.save()
+        
+        appointment.status = 'Rejected' # или 'CancelledByClient'
+        # appointment.cancelled_by_client = True (если добавили поле)
+        appointment.save()
+        
+        # Уведомление юристу
+        email_subject = f"Клиент отменил запись на {appointment.date.strftime('%d.%m.%Y %H:%M')}"
+        email_body = (
+            f"Уважаемый(-ая) {appointment.lawyer.full_name},\n\n"
+            f"Клиент {appointment.client.full_name} ({appointment.client.email}) "
+            f"отменил свою запись на {appointment.date.strftime('%d.%m.%Y %H:%M')}.\n\n"
+            "Слот был автоматически освобожден в календаре."
+        )
+        email = EmailMessage(email_subject, email_body, to=[appointment.lawyer.email])
+        email.send(fail_silently=False) # или True, если не критично
+
+        messages.success(request, "Запись успешно отменена.")
+        return redirect('accounts:client_profile')
+    
+    return render(request, 'appointments/confirm_cancel_client.html', {'appointment': appointment})
+@login_required
+def appointment_detail_client(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id, client=request.user)
+    documents = appointment.documents.all()
+    upload_form = AppointmentDocumentForm()
+
+    if request.method == 'POST':
+        upload_form = AppointmentDocumentForm(request.POST, request.FILES)
+        if upload_form.is_valid():
+            doc = upload_form.save(commit=False)
+            doc.appointment = appointment
+            doc.uploaded_by = request.user
+            doc.save()
+            messages.success(request, f"Файл '{doc.document.name.split('/')[-1]}' успешно загружен.")
+            return redirect('appointments:appointment_detail_client', appointment_id=appointment.id)
+        else:
+            messages.error(request, "Ошибка при загрузке файла.")
+
+    context = {
+        'appointment': appointment,
+        'documents': documents,
+        'upload_form': upload_form,
+        # ... другие данные для client_profile ...
+    }
+    # Используйте существующий client_profile.html или создайте appointment_detail_client.html
+    return render(request, 'accounts/client_profile.html', context)
+@login_required
+def download_general_document(request, document_id):
+    from accounts.models import ClientDocument # Импорт здесь, чтобы избежать цикличности
+    document = get_object_or_404(ClientDocument, id=document_id, client=request.user)
+    # ... (логика скачивания как раньше) ...
+    try:
+        file_path = document.document.path
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/octet-stream")
+            response['Content-Disposition'] = f'inline; filename={document.document.name.split("/")[-1]}'
+            return response
+    except FileNotFoundError:
+        raise Http404
+
+@login_required
+def download_appointment_document(request, document_id):
+    document = get_object_or_404(AppointmentDocument, id=document_id)
+    # Проверка прав: клиент этой записи или юрист этой записи
+    is_client_owner = document.appointment.client == request.user
+    # Убедитесь, что request.user может иметь lawyerprofile
+    is_lawyer_for_appointment = hasattr(request.user, 'lawyerprofile') and document.appointment.lawyer == request.user
+    
+    if not (is_client_owner or is_lawyer_for_appointment):
+        raise Http404
+    # ... (логика скачивания как раньше) ...
+    try:
+        file_path = document.document.path
+        with open(file_path, 'rb') as fh:
+            response = HttpResponse(fh.read(), content_type="application/octet-stream")
+            response['Content-Disposition'] = f'inline; filename={document.document.name.split("/")[-1]}'
+            return response
+    except FileNotFoundError:
+        raise Http404
+@login_required
+def appointment_detail(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id, client=request.user)
+    documents = appointment.documents.all()
+    upload_form = AppointmentDocumentForm()
+
+    # Логика для can_cancel
+    can_cancel_deadline = appointment.date - timedelta(hours=24)
+    can_cancel = (appointment.status in ['Pending', 'Approved']) and \
+                 (timezone.now() < can_cancel_deadline)
+
+    if request.method == 'POST':
+        # Предполагаем, что это POST от формы загрузки документов к записи
+        upload_form = AppointmentDocumentForm(request.POST, request.FILES)
+        if upload_form.is_valid():
+            doc = upload_form.save(commit=False)
+            doc.appointment = appointment
+            doc.uploaded_by = request.user
+            doc.save()
+            messages.success(request, f"Документ '{doc.document.name.split('/')[-1]}' успешно прикреплен к записи.")
+            return redirect('appointments:appointment_detail', appointment_id=appointment.id)
+        else:
+            messages.error(request, "Ошибка при загрузке документа к записи.")
+    
+    context = {
+        'appointment': appointment,
+        'documents': documents,
+        'upload_form': upload_form,
+        'can_cancel': can_cancel,
+    }
+    return render(request, 'appointments/appointment_detail.html', context)

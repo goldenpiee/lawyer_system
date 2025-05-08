@@ -1,0 +1,69 @@
+appointment_detail.html{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 700px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Детали записи #{{ appointment.id }}</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Дата и время:</strong> {{ appointment.date|date:"l, d F Y, H:i" }}</p>
+            <p><strong>Юрист:</strong> {{ appointment.lawyer.full_name }}</p>
+            <p><strong>Статус:</strong> 
+                <span class="status-badge {{ appointment.status|lower }}">
+                    {{ appointment.get_status_display }}
+                </span>
+            </p>
+
+            {% if can_cancel %}
+            <div class="my-3">
+                <a href="{% url 'appointments:cancel_appointment_client' appointment.id %}" class="btn btn-warning">
+                    <i class="bi bi-calendar-x"></i> Отменить запись
+                </a>
+            </div>
+            {% endif %}
+
+            <hr>
+
+            <h4 class="mt-4 mb-3">Документы к этой записи</h4>
+            {% if documents %}
+                <ul class="list-unstyled">
+                {% for doc in documents %}
+                    <li class="mb-2">
+                        <i class="bi bi-file-earmark-text me-1"></i>
+                        <a href="{% url 'appointments:download_appointment_document' doc.id %}">{{ doc.document.name|filename }}</a>
+                        <small class="text-muted"> ({{ doc.uploaded_at|date:"d.m.Y H:i" }})</small>
+                        {% if doc.description %} - <em class="text-muted small">{{ doc.description }}</em>{% endif %}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">К этой записи документы не прикреплены.</p>
+            {% endif %}
+
+            <h5 class="mt-4 mb-3">Прикрепить новый документ к этой записи</h5>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ upload_form.as_p }}
+                <button type="submit" class="btn btn-success btn-sm mt-2">
+                    <i class="bi bi-upload"></i> Прикрепить документ
+                </button>
+            </form>
+            
+            <div class="mt-4">
+                <a href="{% url 'accounts:client_profile' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left-circle"></i> Назад к профилю
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    /* Скопируйте или подключите стили для status-badge сюда, если они еще не глобальные */
+    .status-badge { padding: 0.3em 0.6em; border-radius: 0.25rem; font-size: 0.85em; }
+    .status-badge.pending { background-color: #ffc107; color: #000; }
+    .status-badge.approved { background-color: #198754; color: #fff; }
+    .status-badge.rejected { background-color: #dc3545; color: #fff; }
+</style>
+{% endblock %}

@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Permission
 from django.db import models
 from django.core.validators import RegexValidator
+from django.conf import settings
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, full_name, phone, password=None, **extra_fields):
@@ -96,3 +97,16 @@ class LawyerProfile(models.Model):
 
     def __str__(self):
         return f'Lawyer: {self.user.email}'
+class ClientDocument(models.Model):
+    client = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='general_documents', on_delete=models.CASCADE)
+    document = models.FileField(upload_to='client_general_documents/%Y/%m/%d/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=255, blank=True, verbose_name="Описание файла")
+
+    def __str__(self):
+        return f"Общий документ клиента {self.client.email} - {self.document.name.split('/')[-1]}"
+
+    class Meta:
+        ordering = ['-uploaded_at']
+        verbose_name = "Общий документ клиента"
+        verbose_name_plural = "Общие документы клиентов"

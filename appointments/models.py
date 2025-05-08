@@ -111,3 +111,20 @@ class CalendarSlot(models.Model):
             raise ValidationError("Время начала должно быть раньше времени окончания")
         if self.start_time < timezone.now():
             raise ValidationError("Временной слот не может быть в прошлом")
+class AppointmentDocument(models.Model):
+    appointment = models.ForeignKey(Appointment, related_name='documents', on_delete=models.CASCADE)
+    document = models.FileField(upload_to='appointment_documents/%Y/%m/%d/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, # или CASCADE, если удалять документы при удалении пользователя
+        null=True,
+        related_name='uploaded_documents'
+    )
+    description = models.CharField(max_length=255, blank=True, verbose_name="Описание файла")
+
+    def __str__(self):
+        return f"Документ для записи {self.appointment.id} - {self.document.name.split('/')[-1]}"
+
+    class Meta:
+        ordering = ['-uploaded_at']

@@ -3,6 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from .models import CustomUser
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
+from .models import ClientDocument
 
 
 User = get_user_model()
@@ -51,3 +52,11 @@ class PasswordResetConfirmForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Пароли не совпадают")
         return cleaned_data
+class ClientDocumentForm(forms.ModelForm):
+    class Meta:
+        model = ClientDocument
+        fields = ['document', 'description']
+        widgets = {
+            'description': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Описание (необязательно)'}),
+            'document': forms.FileInput(attrs={'class': 'form-control form-control-sm'})
+        }
