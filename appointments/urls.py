@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+import include
 
 app_name = 'appointments'
 
@@ -15,9 +16,8 @@ urlpatterns = [
     path('clear_rejected/', views.clear_rejected_appointments, name='clear_rejected'),
     path('clear-all-slots/', views.clear_all_slots, name='clear_all_slots'),
     path('generate-slots-days/', views.generate_slots_days, name='generate_slots_days'),
-    path('cancel-by-client/<int:appointment_id>/', views.cancel_appointment_client, name='cancel_appointment_client'),
-    path('appointment/<int:appointment_id>/', views.appointment_detail_client, name='appointment_detail_client'),
-     path('appointment/<int:appointment_id>/', views.appointment_detail, name='appointment_detail'),
+    path('appointment/<int:appointment_id>/', views.appointment_detail, name='appointment_detail'),
+    path('cancel_appointment_client/<int:appointment_id>/', views.cancel_appointment_client, name='cancel_appointment_client'),
     path('appointment/cancel-by-client/<int:appointment_id>/', views.cancel_appointment_client, name='cancel_appointment_client'),
     path('download/general/<int:document_id>/', views.download_general_document, name='download_general_document'),
     path('download/appointment/<int:document_id>/', views.download_appointment_document, name='download_appointment_document'),

@@ -1,0 +1,97 @@
+{# templates/appointments/confirm_cancel_client.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+    .confirm-card {
+        border: 1px solid var(--bs-warning); /* Рамка в цвет предупреждения */
+        border-radius: 0.75rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.075) !important;
+    }
+    .confirm-card-header {
+        background-color: var(--bs-warning);
+        color: var(--bs-black); /* Темный текст на желтом фоне */
+        border-top-left-radius: 0.75rem;
+        border-top-right-radius: 0.75rem;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    .confirm-card-header .bi-exclamation-triangle-fill {
+        font-size: 1.5rem; /* Иконка побольше */
+        margin-right: 0.75rem;
+    }
+    .confirm-card-header h4 {
+        margin-bottom: 0;
+        font-weight: 500;
+    }
+    .confirm-card-body {
+        padding: 1.5rem 2rem; /* Больше внутреннего пространства */
+    }
+    .confirm-card .lead {
+        font-size: 1.15rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+    .confirm-card .appointment-details strong {
+        color: var(--bs-primary); /* Акцент на деталях записи */
+    }
+    .confirm-actions .btn {
+        padding: 0.6rem 1.5rem; /* Кнопки побольше */
+        font-size: 1.05rem;
+        min-width: 160px;
+    }
+
+    @media (max-width: 767px) {
+        .confirm-card-body {
+            padding: 1.5rem;
+        }
+        .confirm-actions .btn {
+            width: 100%;
+            margin-bottom: 0.75rem;
+        }
+         .confirm-actions .btn:last-child {
+            margin-bottom: 0;
+        }
+        .confirm-actions {
+            text-align: center; /* Центрируем кнопки на мобильных */
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card confirm-card">
+                <div class="card-header confirm-card-header">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <h4>Подтверждение отмены записи</h4>
+                </div>
+                <div class="card-body confirm-card-body">
+                    <p class="lead text-center">Вы уверены, что хотите отменить вашу запись?</p>
+                    
+                    <div class="text-center mb-4 appointment-details">
+                        <p class="mb-1"><strong>Юрист:</strong> {{ appointment.lawyer.full_name }}</p>
+                        <p><strong>Дата и время:</strong> {{ appointment.date|date:"l, j F Y, H:i" }} (МСК)</p>
+                    </div>
+                    
+                    <form method="post" class="text-center">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center confirm-actions">
+                            <a href="{{ request.META.HTTP_REFERER|default:request.user.get_absolute_url }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Нет, вернуться
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-check-lg me-1"></i>Да, отменить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

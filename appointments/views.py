@@ -16,6 +16,8 @@ from django.conf import settings
 from zoneinfo import ZoneInfo
 from .forms import AppointmentDocumentForm
 from .models import AppointmentDocument
+from accounts.forms import ClientDocumentForm
+from accounts.models import ClientDocument
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
@@ -23,15 +25,57 @@ from django.http import HttpResponse, Http404
 
 @login_required
 def client_profile(request):
-    """
-    Показывает профиль клиента с личной информацией и списком его заявок.
-    """
     user = request.user
-    appointments = user.client_appointments.all()
-    return render(request, 'accounts/client_profile.html', {
+    
+    # Логика для отображения записей (appointments)
+    # Эта часть может быть упрощена, если can_cancel вычисляется в модели или шаблоне
+    appointments_queryset = Appointment.objects.filter(client=user).select_related('lawyer').order_by('-date')
+    appointments_with_cancel_info = []
+    for appointment in appointments_queryset:
+        can_cancel_deadline = appointment.date - timedelta(hours=24)
+        appointment.can_cancel = (
+            appointment.status in ['Pending', 'Approved'] and
+            timezone.now() < can_cancel_deadline
+        )
+        # Также можно добавить загруженные документы к каждой записи, если нужно
+        # appointment.attached_documents = appointment.documents.all() # Если related_name='documents'
+        appointments_with_cancel_info.append(appointment)
+
+    general_documents = user.general_documents.all()
+    general_document_form = ClientDocumentForm() # Инициализация формы для GET
+
+    if request.method == 'POST':
+        # Проверяем, была ли нажата кнопка загрузки общего документа
+        if 'upload_general_document' in request.POST:
+            general_document_form = ClientDocumentForm(request.POST, request.FILES, instance=ClientDocument(client=user)) # instance можно так, или doc.client = user позже
+            if general_document_form.is_valid():
+                general_document_form.save() # Если instance был указан с client, то просто save()
+                # Или:
+                # doc = general_document_form.save(commit=False)
+                # doc.client = user
+                # doc.save()
+                messages.success(request, 'Общий документ успешно загружен.')
+                return redirect('accounts:client_profile')
+            else:
+                # Форма невалидна, ошибки будут в general_document_form.errors
+                error_message_text = "Пожалуйста, исправьте ошибки: "
+                for field, errors_list in general_document_form.errors.items():
+                    error_message_text += f"{field}: {', '.join(errors_list)}. "
+                messages.error(request, error_message_text.strip())
+                # general_document_form с ошибками будет передан в контекст ниже
+        # else:
+            # Здесь может быть обработка других POST запросов, если они есть на этой странице
+            # Например, если бы форма AppointmentDocumentForm отправлялась сюда же
+            pass
+
+
+    context = {
         'user': user,
-        'appointments': appointments,
-    })
+        'appointments': appointments_with_cancel_info, # Передаем обработанный список
+        'general_documents': general_documents,
+        'general_document_form': general_document_form,
+    }
+    return render(request, 'accounts/client_profile.html', context)
 
 @login_required
 def create_appointment(request, slot_id):
@@ -416,41 +460,73 @@ def generate_slots_days(request):
 def cancel_appointment_client(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id, client=request.user)
     
-    # Правило: можно отменить не позднее чем за 24 часа (например)
-    # Убедитесь, что appointment.date осведомлен о временной зоне
-    if appointment.date < timezone.now() + timedelta(hours=24):
-        messages.error(request, "Запись не может быть отменена менее чем за 24 часа до начала.")
-        return redirect('accounts:client_profile')
+    # Проверка, можно ли отменить запись (например, не менее чем за 24 часа)
+    can_cancel_deadline = appointment.date - timedelta(hours=24) # Пример
+    can_really_cancel = (
+        appointment.status in ['Pending', 'Approved'] and
+        timezone.now() < can_cancel_deadline
+    )
+
+    if not can_really_cancel:
+        messages.error(request, "Эту запись уже нельзя отменить.")
+        return redirect('appointments:appointment_detail', appointment_id=appointment.id) # Или в профиль
 
     if request.method == 'POST':
-        slot = CalendarSlot.objects.filter(
-            lawyer=appointment.lawyer,
-            start_time=appointment.date # Предполагаем, что appointment.date точно соответствует start_time слота
-        ).first()
+        # Логика отмены
+        original_status = appointment.status
+        appointment.status = 'Rejected' # Или 'CancelledByClient'
+        appointment.save()
 
-        if slot:
+        # Освобождаем слот, если он был забронирован
+        try:
+            slot = CalendarSlot.objects.get(
+                lawyer=appointment.lawyer,
+                start_time=appointment.date,
+                # is_booked=True # Можно добавить эту проверку
+            )
             slot.is_booked = False
             slot.save()
+        except CalendarSlot.DoesNotExist:
+            # Слот мог быть удален или не создан, если запись импортирована
+            # Либо создаем свободный слот (если это предусмотрено логикой)
+            pass 
+        except Exception as e:
+            # Логируем ошибку освобождения слота, но продолжаем отмену записи
+            print(f"Error unbooking slot for cancelled appointment {appointment.id}: {e}")
+
+
+        # Уведомление юристу об отмене
+        moscow_tz = ZoneInfo('Europe/Moscow') # Если не импортировано: from zoneinfo import ZoneInfo
+        local_dt = appointment.date.astimezone(moscow_tz)
         
-        appointment.status = 'Rejected' # или 'CancelledByClient'
-        # appointment.cancelled_by_client = True (если добавили поле)
-        appointment.save()
-        
-        # Уведомление юристу
-        email_subject = f"Клиент отменил запись на {appointment.date.strftime('%d.%m.%Y %H:%M')}"
+        email_subject = f"Клиент отменил запись на {local_dt.strftime('%d.%m.%Y %H:%M')}"
         email_body = (
             f"Уважаемый(-ая) {appointment.lawyer.full_name},\n\n"
             f"Клиент {appointment.client.full_name} ({appointment.client.email}) "
-            f"отменил свою запись на {appointment.date.strftime('%d.%m.%Y %H:%M')}.\n\n"
-            "Слот был автоматически освобожден в календаре."
+            f"отменил свою запись на {local_dt.strftime('%d.%m.%Y %H:%M')} (МСК).\n\n"
+            f"Слот был автоматически освобожден в календаре (если существовал и был забронирован)."
         )
-        email = EmailMessage(email_subject, email_body, to=[appointment.lawyer.email])
-        email.send(fail_silently=False) # или True, если не критично
+        try:
+            email = EmailMessage(
+                email_subject,
+                email_body,
+                from_email='Юридические услуги по банкротству <matrica646@gmail.com>', # Из settings.DEFAULT_FROM_EMAIL
+                to=[appointment.lawyer.email]
+            )
+            email.send(fail_silently=False)
+        except Exception as e:
+            print(f"Error sending cancellation email to lawyer: {e}")
+            messages.warning(request, "Запись отменена, но не удалось отправить уведомление юристу.")
+
 
         messages.success(request, "Запись успешно отменена.")
-        return redirect('accounts:client_profile')
+        return redirect('accounts:client_profile') # Редирект в профиль клиента
     
-    return render(request, 'appointments/confirm_cancel_client.html', {'appointment': appointment})
+    # Для GET-запроса отображаем страницу подтверждения
+    context = {
+        'appointment': appointment
+    }
+    return render(request, 'appointments/confirm_cancel_client.html', context) # Новый шаблон
 @login_required
 def appointment_detail_client(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id, client=request.user)
@@ -511,33 +587,57 @@ def download_appointment_document(request, document_id):
     except FileNotFoundError:
         raise Http404
 @login_required
-def appointment_detail(request, appointment_id):
-    appointment = get_object_or_404(Appointment, id=appointment_id, client=request.user)
-    documents = appointment.documents.all()
+def appointment_detail(request, appointment_id): # Используем это имя, как в вашем urls.py и client_profile.html
+    # Убеждаемся, что текущий пользователь - это клиент данной записи ИЛИ юрист данной записи
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+    
+    # Проверка прав доступа
+    is_client_owner = appointment.client == request.user
+    is_lawyer_for_appointment = hasattr(request.user, 'lawyerprofile') and appointment.lawyer == request.user
+    
+    if not (is_client_owner or is_lawyer_for_appointment):
+        messages.error(request, "У вас нет прав для просмотра этой записи.")
+        # Редирект на соответствующую страницу в зависимости от роли
+        if hasattr(request.user, 'lawyerprofile'):
+            return redirect('appointments:lawyer_dashboard')
+        else:
+            return redirect('accounts:client_profile')
+
+    documents = appointment.documents.all() # related_name='documents' в модели AppointmentDocument
     upload_form = AppointmentDocumentForm()
 
-    # Логика для can_cancel
-    can_cancel_deadline = appointment.date - timedelta(hours=24)
-    can_cancel = (appointment.status in ['Pending', 'Approved']) and \
-                 (timezone.now() < can_cancel_deadline)
+    # Логика для возможности отмены клиентом
+    can_cancel = False
+    if is_client_owner:
+        can_cancel_deadline = appointment.date - timedelta(hours=24) # Пример: за 24 часа
+        can_cancel = (
+            appointment.status in ['Pending', 'Approved'] and
+            timezone.now() < can_cancel_deadline
+        )
 
     if request.method == 'POST':
-        # Предполагаем, что это POST от формы загрузки документов к записи
-        upload_form = AppointmentDocumentForm(request.POST, request.FILES)
-        if upload_form.is_valid():
-            doc = upload_form.save(commit=False)
-            doc.appointment = appointment
-            doc.uploaded_by = request.user
-            doc.save()
-            messages.success(request, f"Документ '{doc.document.name.split('/')[-1]}' успешно прикреплен к записи.")
-            return redirect('appointments:appointment_detail', appointment_id=appointment.id)
-        else:
-            messages.error(request, "Ошибка при загрузке документа к записи.")
+        # Обработка загрузки документа к этой записи
+        # Убедитесь, что у кнопки submit в форме есть name, если форм на странице несколько
+        # или если это единственная форма, то просто проверяем request.FILES
+        if request.FILES: # Простая проверка, что файлы были отправлены
+            upload_form = AppointmentDocumentForm(request.POST, request.FILES)
+            if upload_form.is_valid():
+                doc = upload_form.save(commit=False)
+                doc.appointment = appointment
+                doc.uploaded_by = request.user # Кто загрузил
+                doc.save()
+                messages.success(request, f"Документ '{doc.document.name.split('/')[-1]}' успешно прикреплен к записи.")
+                return redirect('appointments:appointment_detail', appointment_id=appointment.id) # Редирект на эту же страницу
+            else:
+                messages.error(request, "Ошибка при загрузке документа к записи.")
     
     context = {
         'appointment': appointment,
         'documents': documents,
         'upload_form': upload_form,
-        'can_cancel': can_cancel,
+        'can_cancel': can_cancel, # Передаем флаг для кнопки отмены
+        'is_client_owner': is_client_owner, # Для условного отображения в шаблоне
+        'is_lawyer_for_appointment': is_lawyer_for_appointment,
     }
+    # Рендерим специализированный шаблон для деталей записи
     return render(request, 'appointments/appointment_detail.html', context)

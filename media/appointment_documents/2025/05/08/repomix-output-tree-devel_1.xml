@@ -1,0 +1,5181 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+The content has been processed where comments have been removed, content has been compressed (code blocks are separated by ⋮---- delimiter), security check has been disabled.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Code comments have been removed from supported file types
+- Content has been compressed - code blocks are separated by ⋮---- delimiter
+- Security check has been disabled - content may contain sensitive information
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+<additional_info>
+
+</additional_info>
+
+</file_summary>
+
+<directory_structure>
+accounts/
+  management/
+    commands/
+      createsuperuser.py
+  migrations/
+    0001_initial.py
+    0002_clientdocument.py
+  admin.py
+  apps.py
+  forms.py
+  models.py
+  tests.py
+  urls.py
+  views.py
+appointments/
+  migrations/
+    0001_initial.py
+    0002_alter_appointment_status.py
+    0003_appointmentdocument.py
+  templates/
+    appointments/
+      generate_slots_days.html
+      generate_slots.html
+  templatetags/
+    custom_filters.py
+  admin.py
+  apps.py
+  forms.py
+  models.py
+  tests.py
+  urls.py
+  views.py
+lawyer_system/
+  asgi.py
+  schema.dot
+  settings.py
+  urls.py
+  views.py
+  wsgi.py
+modelrender/
+  bdmodel.puml
+  infomodel.puml
+  model.dot
+  render.py
+static/
+  js/
+    app.js
+  calendar.css
+  site.webmanifest
+  styles.css
+templates/
+  accounts/
+    client_profile.html
+    edit_profile.html
+  appointments/
+    add_time_slot.html
+    appointment_detail.html
+    calendar.html
+    confirm_cancel.html
+    create_appointment.html
+    generate_slots_days.html
+    lawyer_dashboard.html
+    select_slot.html
+  registration/
+    confirm_email.html
+    login.html
+    password_reset_confirm.html
+    password_reset_request.html
+    register.html
+    registration.html
+  base.html
+  home.html
+.gitignore
+context_processors.py
+manage.py
+requirements.txt
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="accounts/management/commands/createsuperuser.py">
+class Command(BaseCommand)
+⋮----
+help = 'Creates a superuser non-interactively using environment variables if one does not exist, tailored for CustomUser.'
+⋮----
+def handle(self, *args, **options)
+⋮----
+User = get_user_model()
+⋮----
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+full_name = os.environ.get('DJANGO_SUPERUSER_FULL_NAME')
+phone = os.environ.get('DJANGO_SUPERUSER_PHONE')
+⋮----
+required_env_vars = {
+⋮----
+missing_vars = [key for key, value in required_env_vars.items() if not value]
+⋮----
+user = User.objects.create_superuser(
+</file>
+
+<file path="accounts/migrations/0001_initial.py">
+class Migration(migrations.Migration)
+⋮----
+initial = True
+⋮----
+dependencies = [
+⋮----
+operations = [
+</file>
+
+<file path="accounts/migrations/0002_clientdocument.py">
+class Migration(migrations.Migration)
+⋮----
+dependencies = [
+⋮----
+operations = [
+</file>
+
+<file path="accounts/admin.py">
+class CustomUserAdmin(UserAdmin)
+⋮----
+fieldsets = (
+add_fieldsets = (
+list_display = ('email', 'full_name', 'phone', 'is_staff')
+search_fields = ('email', 'full_name', 'phone')
+ordering = ('email',)
+⋮----
+class LawyerProfileAdmin(admin.ModelAdmin)
+⋮----
+def formfield_for_foreignkey(self, db_field, request, **kwargs)
+⋮----
+object_id = request.resolver_match.kwargs.get('object_id')
+⋮----
+obj = self.model.objects.get(pk=object_id)
+⋮----
+list_display = ['user', 'id']
+search_fields = ['user__email']
+</file>
+
+<file path="accounts/apps.py">
+class AccountsConfig(AppConfig)
+⋮----
+default_auto_field = 'django.db.models.BigAutoField'
+name = 'accounts'
+</file>
+
+<file path="accounts/forms.py">
+User = get_user_model()
+class RegistrationForm(UserCreationForm)
+⋮----
+class Meta
+⋮----
+model = CustomUser
+fields = [
+⋮----
+class ProfileEditForm(forms.ModelForm)
+⋮----
+fields = ['full_name', 'phone']
+widgets = {
+⋮----
+class EmailAuthenticationForm(AuthenticationForm)
+⋮----
+username = forms.EmailField(
+⋮----
+model = User
+fields = ['email', 'password']
+⋮----
+class PasswordResetRequestForm(forms.Form)
+⋮----
+email = forms.EmailField(label="Email", widget=forms.EmailInput(attrs={'class': 'form-control'}))
+⋮----
+class PasswordResetConfirmForm(forms.Form)
+⋮----
+code = forms.CharField(label="Код из email", max_length=6, widget=forms.TextInput(attrs={'class': 'form-control'}))
+new_password1 = forms.CharField(label="Новый пароль", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+new_password2 = forms.CharField(label="Повторите новый пароль", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+⋮----
+def clean(self)
+⋮----
+cleaned_data = super().clean()
+p1 = cleaned_data.get('new_password1')
+p2 = cleaned_data.get('new_password2')
+⋮----
+class ClientDocumentForm(forms.ModelForm)
+⋮----
+model = ClientDocument
+fields = ['document', 'description']
+</file>
+
+<file path="accounts/models.py">
+class CustomUserManager(BaseUserManager)
+⋮----
+def create_user(self, email, full_name, phone, password=None, **extra_fields)
+⋮----
+email = self.normalize_email(email)
+user = self.model(
+⋮----
+def create_superuser(self, email, full_name, phone, password=None, **extra_fields)
+⋮----
+class CustomUser(AbstractUser)
+⋮----
+username = None
+email = models.EmailField(
+full_name = models.CharField("ФИО", max_length=150)
+phone = models.CharField(
+⋮----
+groups = models.ManyToManyField(
+user_permissions = models.ManyToManyField(
+⋮----
+USERNAME_FIELD = 'email'
+REQUIRED_FIELDS = ['full_name', 'phone']
+⋮----
+objects = CustomUserManager()
+⋮----
+def __str__(self)
+⋮----
+class LawyerProfile(models.Model)
+⋮----
+user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+specialization = models.CharField(
+office_address = models.CharField(
+⋮----
+def clean(self)
+⋮----
+class ClientDocument(models.Model)
+⋮----
+client = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='general_documents', on_delete=models.CASCADE)
+document = models.FileField(upload_to='client_general_documents/%Y/%m/%d/')
+uploaded_at = models.DateTimeField(auto_now_add=True)
+description = models.CharField(max_length=255, blank=True, verbose_name="Описание файла")
+⋮----
+class Meta
+⋮----
+ordering = ['-uploaded_at']
+verbose_name = "Общий документ клиента"
+verbose_name_plural = "Общие документы клиентов"
+</file>
+
+<file path="accounts/tests.py">
+class AccountsBasicTest(TestCase)
+⋮----
+def test_create_user(self)
+⋮----
+User = get_user_model()
+user = User.objects.create_user(
+⋮----
+def test_login_page(self)
+⋮----
+response = self.client.get(reverse('accounts:login'))
+⋮----
+class AccountsAdvancedTest(TestCase)
+⋮----
+def setUp(self)
+⋮----
+def test_create_lawyer_profile(self)
+⋮----
+profile = LawyerProfile.objects.create(user=self.lawyer, specialization='BANKRUPTCY')
+⋮----
+def test_lawyer_profile_unique(self)
+⋮----
+profile2 = LawyerProfile(user=self.lawyer, specialization='FAMILY')
+⋮----
+def test_send_email_function(self)
+⋮----
+subject = 'Тестовая тема'
+body = 'Тестовое сообщение для проверки отправки email.'
+from_email = 'testsender@example.com'
+to_email = ['testrecipient@example.com']
+⋮----
+email = EmailMessage(
+⋮----
+msg = mail.outbox[0]
+</file>
+
+<file path="accounts/urls.py">
+app_name = 'accounts'
+⋮----
+urlpatterns = [
+</file>
+
+<file path="accounts/views.py">
+def home(request)
+⋮----
+def register(request)
+⋮----
+email = request.POST.get('email')
+phone = request.POST.get('phone')
+⋮----
+User = get_user_model()
+⋮----
+form = RegistrationForm(request.POST)
+⋮----
+user = form.save(commit=False)
+⋮----
+code = get_random_string(6, allowed_chars='0123456789')
+⋮----
+email = EmailMessage(
+⋮----
+form = RegistrationForm()
+⋮----
+def confirm_email(request)
+⋮----
+code = request.POST.get('code')
+email = request.session.get('registration_email')
+session_code = request.session.get('registration_code')
+⋮----
+user = get_user_model().objects.filter(email=email).first()
+⋮----
+@login_required
+def profile_redirect(request)
+⋮----
+def login_view(request)
+⋮----
+form = EmailAuthenticationForm(request, data=request.POST)
+⋮----
+email = form.cleaned_data.get('username')
+password = form.cleaned_data.get('password')
+user = authenticate(username=email, password=password)
+⋮----
+next_url = request.GET.get('next')
+⋮----
+form = EmailAuthenticationForm()
+⋮----
+@login_required
+def edit_profile(request)
+⋮----
+form = ProfileEditForm(request.POST, instance=request.user)
+⋮----
+form = ProfileEditForm(instance=request.user)
+⋮----
+def password_reset_request(request)
+⋮----
+code_sent = False
+⋮----
+form = PasswordResetRequestForm(request.POST)
+⋮----
+email = form.cleaned_data['email']
+⋮----
+email_message = EmailMessage(
+⋮----
+form = PasswordResetRequestForm()
+⋮----
+def password_reset_confirm(request)
+⋮----
+form = PasswordResetConfirmForm(request.POST)
+⋮----
+code = form.cleaned_data['code']
+password = form.cleaned_data['new_password1']
+session_code = request.session.get('reset_code')
+email = request.session.get('reset_email')
+⋮----
+form = PasswordResetConfirmForm()
+⋮----
+@login_required
+def client_profile(request)
+⋮----
+user = request.user
+⋮----
+appointments = Appointment.objects.filter(client=user).order_by('-date')
+⋮----
+general_documents = user.general_documents.all()
+general_document_form = ClientDocumentForm()
+⋮----
+can_cancel_deadline = appointment.date - timedelta(hours=24)
+⋮----
+general_document_form = ClientDocumentForm(request.POST, request.FILES)
+⋮----
+doc = general_document_form.save(commit=False)
+⋮----
+context = {
+⋮----
+class CustomLoginView(LoginView)
+⋮----
+form_class = EmailAuthenticationForm
+template_name = 'registration/login.html'
+redirect_authenticated_user = True
+⋮----
+def get_success_url(self)
+⋮----
+next_url = self.request.GET.get('next')
+⋮----
+def form_invalid(self, form)
+</file>
+
+<file path="appointments/migrations/0001_initial.py">
+class Migration(migrations.Migration)
+⋮----
+initial = True
+⋮----
+dependencies = [
+⋮----
+operations = [
+</file>
+
+<file path="appointments/migrations/0002_alter_appointment_status.py">
+class Migration(migrations.Migration)
+⋮----
+dependencies = [
+⋮----
+operations = [
+</file>
+
+<file path="appointments/migrations/0003_appointmentdocument.py">
+class Migration(migrations.Migration)
+⋮----
+dependencies = [
+⋮----
+operations = [
+</file>
+
+<file path="appointments/templates/appointments/generate_slots_days.html">
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Выберите дни для генерации слотов</h2>
+    <div id="calendar-days" class="mb-3"></div>
+    <form id="generateSlotsForm" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="selected_dates" id="selectedDatesInput">
+        <div class="mb-3">
+            <label>Время начала:</label>
+            <input type="time" name="start_time" required>
+        </div>
+        <div class="mb-3">
+            <label>Время окончания:</label>
+            <input type="time" name="end_time" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Сгенерировать слоты</button>
+    </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+    let selectedDays = new Set();
+
+    function renderCalendar(month, year) {
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        let html = `<div class="d-flex justify-content-between align-items-center mb-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="prevMonthBtn">&laquo;</button>
+            <span><b>${firstDay.toLocaleString('ru-RU', {month: 'long'})} ${year}</b></span>
+            <button type="button" class="btn btn-outline-primary btn-sm" id="nextMonthBtn">&raquo;</button>
+        </div>`;
+        html += '<div class="row row-cols-7 mb-1">';
+        ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => {
+            html += `<div class="col text-center fw-bold">${d}</div>`;
+        });
+        html += '</div><div class="row row-cols-7">';
+        let dayOfWeek = (firstDay.getDay() + 6) % 7;
+        for (let i = 0; i < dayOfWeek; i++) html += '<div class="col"></div>';
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const isSelected = selectedDays.has(dateStr);
+            html += `<div class="col mb-2">
+                <div class="calendar-day-selectable${isSelected ? ' selected' : ''}"
+                    data-date="${dateStr}" style="cursor:pointer;user-select:none;">
+                    ${day}
+                </div>
+            </div>`;
+            if ((dayOfWeek + day) % 7 === 0) html += '</div><div class="row row-cols-7">';
+        }
+        html += '</div>';
+        document.getElementById('calendar-days').innerHTML = html;
+
+        document.getElementById('prevMonthBtn').onclick = () => {
+            if (currentMonth === 0) { currentMonth = 11; currentYear--; }
+            else currentMonth--;
+            renderCalendar(currentMonth, currentYear);
+        };
+        document.getElementById('nextMonthBtn').onclick = () => {
+            if (currentMonth === 11) { currentMonth = 0; currentYear++; }
+            else currentMonth++;
+            renderCalendar(currentMonth, currentYear);
+        };
+        document.querySelectorAll('.calendar-day-selectable').forEach(el => {
+            el.onclick = function() {
+                const date = this.dataset.date;
+                if (selectedDays.has(date)) selectedDays.delete(date);
+                else selectedDays.add(date);
+                renderCalendar(currentMonth, currentYear);
+            };
+        });
+    }
+    renderCalendar(currentMonth, currentYear);
+
+    document.getElementById('generateSlotsForm').onsubmit = function(e) {
+        if (selectedDays.size === 0) {
+            alert('Выберите хотя бы один день!');
+            e.preventDefault();
+            return false;
+        }
+        document.getElementById('selectedDatesInput').value = Array.from(selectedDays).join(',');
+    };
+});
+</script>
+<style>
+.calendar-day-selectable {
+    padding: 10px 0;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: #f8f9fa;
+    text-align: center;
+    margin-bottom: 2px;
+    transition: background 0.2s, border 0.2s;
+}
+.calendar-day-selectable.selected {
+    background: #cce5ff;
+    border-color: #007bff;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="appointments/templates/appointments/generate_slots.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">Генерация слотов на месяц</h2>
+
+            {% if success %}
+                <div class="alert alert-success mb-4">Слоты успешно сгенерированы!</div>
+            {% endif %}
+            {% if cleared %}
+                <div class="alert alert-warning mb-4">Все слоты были удалены!</div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-3">Выберите дни недели для генерации слотов:</label>
+                    <div class="weekday-options">
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday0" name="weekdays" value="0">
+                            <label class="btn btn-outline-primary w-100" for="weekday0">Понедельник</label>
+                        </div>
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday1" name="weekdays" value="1" checked>
+                            <label class="btn btn-outline-primary w-100" for="weekday1">Вторник</label>
+                        </div>
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday2" name="weekdays" value="2" checked>
+                            <label class="btn btn-outline-primary w-100" for="weekday2">Среда</label>
+                        </div>
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday3" name="weekdays" value="3" checked>
+                            <label class="btn btn-outline-primary w-100" for="weekday3">Четверг</label>
+                        </div>
+                        <div class="weekday-option">
+                            <input type="checkbox" class="btn-check" id="weekday4" name="weekdays" value="4">
+                            <label class="btn btn-outline-primary w-100" for="weekday4">Пятница</label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-4">Генерировать слоты</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.weekday-options {
+    display: grid;
+    gap: 10px;
+}
+
+.weekday-option {
+    margin-bottom: 5px;
+}
+
+.btn-outline-primary {
+    border: 2px solid #475569;
+    color: #475569;
+    background-color: white;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: #475569;
+    border-color: #475569;
+    color: white;
+}
+
+.btn-check:checked + .btn-outline-primary {
+    background-color: #475569;
+    border-color: #475569;
+    color: white;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.btn-primary {
+    background-color: #475569;
+    border-color: #475569;
+}
+
+.btn-primary:hover {
+    background-color: #334155;
+    border-color: #334155;
+}
+
+@media (max-width: 576px) {
+    .container {
+        padding: 10px;
+    }
+    .card-body {
+        padding: 15px;
+    }
+    .btn {
+        padding: 8px;
+        font-size: 0.95rem;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="appointments/templatetags/custom_filters.py">
+register = template.Library()
+⋮----
+@register.filter(name='filename')
+def filename(value)
+</file>
+
+<file path="appointments/admin.py">
+class AppointmentAdmin(admin.ModelAdmin)
+⋮----
+list_display = ('client', 'lawyer', 'date', 'status')
+list_filter = ('status', 'date')
+search_fields = ('client__full_name', 'lawyer__full_name')
+⋮----
+class CalendarSlotAdmin(admin.ModelAdmin)
+⋮----
+list_display = ('lawyer', 'start_time', 'end_time', 'is_booked')
+list_filter = ('is_booked', 'start_time')
+date_hierarchy = 'start_time'
+</file>
+
+<file path="appointments/apps.py">
+class AppointmentsConfig(AppConfig)
+⋮----
+default_auto_field = 'django.db.models.BigAutoField'
+name = 'appointments'
+</file>
+
+<file path="appointments/forms.py">
+class CalendarSlotForm(forms.ModelForm)
+⋮----
+class Meta
+⋮----
+model = CalendarSlot
+fields = ['start_time', 'end_time', 'lawyer']
+widgets = {
+class AppointmentDocumentForm(forms.ModelForm)
+⋮----
+model = AppointmentDocument
+fields = ['document', 'description']
+</file>
+
+<file path="appointments/models.py">
+class Appointment(models.Model)
+⋮----
+STATUS_CHOICES = [
+⋮----
+client = models.ForeignKey(
+lawyer = models.ForeignKey(
+date = models.DateTimeField(
+status = models.CharField(
+created_at = models.DateTimeField(
+updated_at = models.DateTimeField(
+⋮----
+class Meta
+⋮----
+verbose_name = "Запись"
+verbose_name_plural = "Записи"
+ordering = ['-date']
+constraints = [
+⋮----
+def __str__(self)
+⋮----
+def clean(self)
+⋮----
+def get_status_display(self)
+⋮----
+class CalendarSlot(models.Model)
+⋮----
+start_time = models.DateTimeField(
+end_time = models.DateTimeField(
+is_booked = models.BooleanField(
+⋮----
+verbose_name = "Временной слот"
+verbose_name_plural = "Временные слоты"
+ordering = ['start_time']
+⋮----
+class AppointmentDocument(models.Model)
+⋮----
+appointment = models.ForeignKey(Appointment, related_name='documents', on_delete=models.CASCADE)
+document = models.FileField(upload_to='appointment_documents/%Y/%m/%d/')
+uploaded_at = models.DateTimeField(auto_now_add=True)
+uploaded_by = models.ForeignKey(
+description = models.CharField(max_length=255, blank=True, verbose_name="Описание файла")
+⋮----
+ordering = ['-uploaded_at']
+</file>
+
+<file path="appointments/tests.py">
+class AppointmentsBasicTest(TestCase)
+⋮----
+def test_dummy(self)
+⋮----
+class AppointmentsAdvancedTest(TestCase)
+⋮----
+def setUp(self)
+⋮----
+def test_create_calendar_slot(self)
+⋮----
+slot = CalendarSlot.objects.create(
+⋮----
+def test_book_slot_and_create_appointment(self)
+⋮----
+response = self.client.post(reverse('appointments:create_appointment', args=[slot.id]))
+⋮----
+appointment = Appointment.objects.first()
+⋮----
+def test_cancel_appointment(self)
+⋮----
+appointment = Appointment.objects.create(
+⋮----
+response = self.client.post(reverse('appointments:update_status', args=[appointment.id]), {'status': 'Rejected'})
+⋮----
+def test_calendar_view_access(self)
+⋮----
+response = self.client.get(reverse('appointments:calendar'))
+⋮----
+def test_lawyer_dashboard_access(self)
+⋮----
+response = self.client.get(reverse('appointments:lawyer_dashboard'))
+⋮----
+def test_lawyer_sees_only_own_appointments(self)
+⋮----
+another_lawyer = get_user_model().objects.create_user(
+⋮----
+slot1 = CalendarSlot.objects.create(
+slot2 = CalendarSlot.objects.create(
+⋮----
+appointment1 = Appointment.objects.create(
+appointment2 = Appointment.objects.create(
+⋮----
+response = self.client.get(reverse('appointments:lawyer_dashboard') + '?status=approved')
+appointments = response.context['appointments']
+⋮----
+# Test second lawyer's view
+</file>
+
+<file path="appointments/urls.py">
+app_name = 'appointments'
+⋮----
+urlpatterns = [
+</file>
+
+<file path="appointments/views.py">
+@login_required
+def client_profile(request)
+⋮----
+user = request.user
+appointments = user.client_appointments.all()
+⋮----
+@login_required
+def create_appointment(request, slot_id)
+⋮----
+slot = get_object_or_404(CalendarSlot, pk=slot_id)
+⋮----
+existing_rejected = Appointment.objects.filter(
+⋮----
+moscow_tz = ZoneInfo('Europe/Moscow')
+local_start_time = slot.start_time.astimezone(moscow_tz)
+⋮----
+@login_required
+def select_slot(request)
+⋮----
+now = timezone.now()
+⋮----
+available_slots = CalendarSlot.objects.filter(
+⋮----
+@login_required(login_url='accounts:login')
+def calendar_view(request)
+⋮----
+current_date_str = request.GET.get('date')
+current_date = timezone.datetime.fromisoformat(current_date_str) if current_date_str else timezone.now()
+⋮----
+first_day = current_date.replace(day=1)
+last_day = (current_date + relativedelta(months=1)).replace(day=1) - timedelta(days=1)
+⋮----
+slots = CalendarSlot.objects.filter(
+⋮----
+slots_json = serialize('json', slots, fields=('start_time', 'is_booked'))
+⋮----
+@login_required
+@user_passes_test(lambda u: hasattr(u, 'lawyerprofile'))
+def create_slot_from_day(request)
+⋮----
+data = json.loads(request.body)
+date_str = data.get('date')
+start_time_str = data.get('startTime')
+⋮----
+date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+start_time_obj = datetime.strptime(start_time_str, '%H:%M').time()
+⋮----
+end_time_obj = (datetime.combine(date_obj, start_time_obj) + timedelta(minutes=30)).time()
+⋮----
+tz = get_current_timezone()
+start_dt_local = datetime.combine(date_obj, start_time_obj)
+end_dt_local = datetime.combine(date_obj, end_time_obj)
+start_time = make_aware(start_dt_local, timezone=tz)
+end_time = make_aware(end_dt_local, timezone=tz)
+⋮----
+slot = CalendarSlot.objects.create(
+⋮----
+@login_required
+@user_passes_test(lambda u: hasattr(u, 'lawyerprofile'))
+def delete_slot(request, slot_id)
+⋮----
+slot = CalendarSlot.objects.get(pk=slot_id)
+⋮----
+@login_required
+@user_passes_test(lambda u: hasattr(u, 'lawyerprofile'))
+def clear_all_slots(request)
+⋮----
+def get_slots_api(request)
+⋮----
+year = int(request.GET.get('year'))
+month = int(request.GET.get('month'))
+⋮----
+start_date = timezone.make_aware(datetime(year, month, 1))
+⋮----
+end_date = timezone.make_aware(datetime(year + 1, 1, 1))
+⋮----
+end_date = timezone.make_aware(datetime(year, month + 1, 1))
+⋮----
+slots_json = serializers.serialize('json', slots)
+⋮----
+@login_required
+def lawyer_dashboard(request)
+⋮----
+status = request.GET.get('status', 'pending')
+status_map = {
+⋮----
+base_appointments = Appointment.objects.select_related('client', 'client__lawyerprofile').filter(lawyer=request.user)
+⋮----
+pending_count = base_appointments.filter(status='Pending').count()
+approved_count = base_appointments.filter(status='Approved').count()
+rejected_count = base_appointments.filter(status='Rejected').count()
+⋮----
+current_status = status_map.get(status, 'pending')
+appointments = base_appointments.filter(status=current_status).order_by('-date')
+⋮----
+context = {
+⋮----
+@login_required
+def update_appointment_status(request, appointment_id)
+⋮----
+appointment = get_object_or_404(Appointment, id=appointment_id)
+new_status = request.POST.get('status')
+⋮----
+old_status = appointment.status
+⋮----
+slot = CalendarSlot.objects.get(
+⋮----
+local_dt = appointment.date.astimezone(moscow_tz)
+email_data = None
+⋮----
+email_data = {
+message = 'Заявка успешно подтверждена'
+⋮----
+message = 'Заявка успешно отклонена'
+⋮----
+message = 'Запись успешно отменена'
+⋮----
+email = EmailMessage(
+⋮----
+@login_required
+def clear_rejected_appointments(request)
+⋮----
+deleted_count = Appointment.objects.filter(
+⋮----
+@csrf_exempt
+@login_required
+@user_passes_test(lambda u: hasattr(u, 'lawyerprofile'))
+def generate_slots_days(request)
+⋮----
+context = {}
+⋮----
+selected_dates = request.POST.get('selected_dates', '')
+start_time = request.POST.get('start_time')
+end_time = request.POST.get('end_time')
+⋮----
+dates = selected_dates.split(',')
+slots_created = 0
+⋮----
+date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+start_dt = timezone.make_aware(datetime.combine(date_obj, datetime.strptime(start_time, "%H:%M").time()))
+end_dt = timezone.make_aware(datetime.combine(date_obj, datetime.strptime(end_time, "%H:%M").time()))
+current = start_dt
+⋮----
+slot_end = current + timedelta(minutes=30)
+⋮----
+current = slot_end
+⋮----
+@login_required
+def cancel_appointment_client(request, appointment_id)
+⋮----
+appointment = get_object_or_404(Appointment, id=appointment_id, client=request.user)
+⋮----
+slot = CalendarSlot.objects.filter(
+⋮----
+email_subject = f"Клиент отменил запись на {appointment.date.strftime('%d.%m.%Y %H:%M')}"
+email_body = (
+email = EmailMessage(email_subject, email_body, to=[appointment.lawyer.email])
+⋮----
+@login_required
+def appointment_detail_client(request, appointment_id)
+⋮----
+documents = appointment.documents.all()
+upload_form = AppointmentDocumentForm()
+⋮----
+upload_form = AppointmentDocumentForm(request.POST, request.FILES)
+⋮----
+doc = upload_form.save(commit=False)
+⋮----
+@login_required
+def download_general_document(request, document_id)
+⋮----
+document = get_object_or_404(ClientDocument, id=document_id, client=request.user)
+⋮----
+file_path = document.document.path
+⋮----
+response = HttpResponse(fh.read(), content_type="application/octet-stream")
+⋮----
+@login_required
+def download_appointment_document(request, document_id)
+⋮----
+document = get_object_or_404(AppointmentDocument, id=document_id)
+⋮----
+is_client_owner = document.appointment.client == request.user
+⋮----
+is_lawyer_for_appointment = hasattr(request.user, 'lawyerprofile') and document.appointment.lawyer == request.user
+⋮----
+@login_required
+def appointment_detail(request, appointment_id)
+⋮----
+can_cancel_deadline = appointment.date - timedelta(hours=24)
+can_cancel = (appointment.status in ['Pending', 'Approved']) and \
+</file>
+
+<file path="lawyer_system/asgi.py">
+application = get_asgi_application()
+</file>
+
+<file path="lawyer_system/schema.dot">
+digraph model_graph {
+  // Dotfile by Django-Extensions graph_models
+  // Created: 2025-03-06 17:14
+  // Cli Options: -a --dot -o schema.dot
+
+  fontname = "Roboto"
+  fontsize = 8
+  splines  = true
+  rankdir = "TB"
+
+  node [
+    fontname = "Roboto"
+    fontsize = 8
+    shape = "plaintext"
+  ]
+
+  edge [
+    fontname = "Roboto"
+    fontsize = 8
+  ]
+
+  // Labels
+
+
+  django_contrib_admin_models_LogEntry [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    LogEntry
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>AutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><B>content_type</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>user</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">action_flag</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">PositiveSmallIntegerField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">action_time</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">change_message</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">TextField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">object_id</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">TextField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">object_repr</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+
+
+
+  django_contrib_auth_models_Permission [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Permission
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>AutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>content_type</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">codename</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">name</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+  django_contrib_auth_models_Group [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Group
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>AutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">name</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+
+
+
+  django_contrib_contenttypes_models_ContentType [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    ContentType
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>AutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">app_label</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">model</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+
+
+
+  django_contrib_sessions_base_session_AbstractBaseSession [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    AbstractBaseSession
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">expire_date</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">session_data</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">TextField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+  django_contrib_sessions_models_Session [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Session<BR/>&lt;<FONT FACE="Roboto"><I>AbstractBaseSession</I></FONT>&gt;
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I><B>session_key</B></I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I><B>CharField</B></I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>expire_date</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>DateTimeField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>session_data</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>TextField</I></FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+
+
+
+  django_contrib_auth_models_AbstractUser [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    AbstractUser<BR/>&lt;<FONT FACE="Roboto"><I>AbstractBaseUser,PermissionsMixin</I></FONT>&gt;
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">date_joined</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">email</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">EmailField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">first_name</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">is_active</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">BooleanField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">is_staff</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">BooleanField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>is_superuser</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>BooleanField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><I>last_login</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><I>DateTimeField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">last_name</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>password</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>CharField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">username</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+  accounts_models_CustomUser [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    CustomUser<BR/>&lt;<FONT FACE="Roboto"><I>AbstractUser</I></FONT>&gt;
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>BigAutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>date_joined</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>DateTimeField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">email</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">EmailField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><I>first_name</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><I>CharField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">full_name</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>is_active</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>BooleanField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>is_staff</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>BooleanField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>is_superuser</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>BooleanField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><I>last_login</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><I>DateTimeField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><I>last_name</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto"><I>CharField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><I>password</I></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><I>CharField</I></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">phone</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+  accounts_models_LawyerProfile [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    LawyerProfile
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>BigAutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>user</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>OneToOneField (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">office_address</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">specialization</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+
+
+
+  appointments_models_Appointment [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    Appointment
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>BigAutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>client</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>lawyer</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">created_at</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">date</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">status</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">CharField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">updated_at</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+  appointments_models_CalendarSlot [label=<
+    <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0">
+    <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+    <FONT FACE="Roboto" COLOR="white" POINT-SIZE="10"><B>
+    CalendarSlot
+    </B></FONT></TD></TR>
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>id</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>BigAutoField</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto"><B>lawyer</B></FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto"><B>ForeignKey (id)</B></FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">created_at</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">end_time</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">is_booked</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">BooleanField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT FACE="Roboto">start_time</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+  
+    <TR><TD ALIGN="LEFT" BORDER="0">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">updated_at</FONT>
+    </TD><TD ALIGN="LEFT">
+    <FONT COLOR="#7B7B7B" FACE="Roboto">DateTimeField</FONT>
+    </TD></TR>
+  
+  
+    </TABLE>
+    >]
+
+
+
+
+  // Relations
+
+  django_contrib_admin_models_LogEntry -> accounts_models_CustomUser
+  [label=" user (logentry)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  django_contrib_admin_models_LogEntry -> django_contrib_contenttypes_models_ContentType
+  [label=" content_type (logentry)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+
+  django_contrib_auth_models_Permission -> django_contrib_contenttypes_models_ContentType
+  [label=" content_type (permission)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  django_contrib_auth_models_Group -> django_contrib_auth_models_Permission
+  [label=" permissions (group)"] [arrowhead=dot arrowtail=dot, dir=both];
+
+
+
+  django_contrib_sessions_models_Session -> django_contrib_sessions_base_session_AbstractBaseSession
+  [label=" abstract\ninheritance"] [arrowhead=empty, arrowtail=none, dir=both];
+
+  django_contrib_auth_base_user_AbstractBaseUser [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">AbstractBaseUser</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  django_contrib_auth_models_AbstractUser -> django_contrib_auth_base_user_AbstractBaseUser
+  [label=" abstract\ninheritance"] [arrowhead=empty, arrowtail=none, dir=both];
+  django_contrib_auth_models_PermissionsMixin [label=<
+  <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0">
+  <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+  <FONT FACE="Roboto" POINT-SIZE="12" COLOR="white">PermissionsMixin</FONT>
+  </TD></TR>
+  </TABLE>
+  >]
+  django_contrib_auth_models_AbstractUser -> django_contrib_auth_models_PermissionsMixin
+  [label=" abstract\ninheritance"] [arrowhead=empty, arrowtail=none, dir=both];
+
+  accounts_models_CustomUser -> django_contrib_auth_models_Group
+  [label=" groups (user)"] [arrowhead=dot arrowtail=dot, dir=both];
+
+  accounts_models_CustomUser -> django_contrib_auth_models_Permission
+  [label=" user_permissions (user)"] [arrowhead=dot arrowtail=dot, dir=both];
+
+  accounts_models_CustomUser -> django_contrib_auth_models_AbstractUser
+  [label=" abstract\ninheritance"] [arrowhead=empty, arrowtail=none, dir=both];
+
+  accounts_models_LawyerProfile -> accounts_models_CustomUser
+  [label=" user (lawyerprofile)"] [arrowhead=none, arrowtail=none, dir=both];
+
+
+  appointments_models_Appointment -> accounts_models_CustomUser
+  [label=" client (client_appointments)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  appointments_models_Appointment -> accounts_models_CustomUser
+  [label=" lawyer (lawyer_appointments)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+  appointments_models_CalendarSlot -> accounts_models_CustomUser
+  [label=" lawyer (calendar_slots)"] [arrowhead=none, arrowtail=dot, dir=both];
+
+
+}
+</file>
+
+<file path="lawyer_system/settings.py">
+dj_database_url = None
+⋮----
+BASE_DIR = Path(__file__).resolve().parent.parent
+⋮----
+SECRET_KEY = os.environ.get('SECRET_KEY', 'goida')
+DEBUG = True
+⋮----
+ALLOWED_HOSTS = ['shuttle.proxy.rlwy.net', 'localhost', '127.0.0.1', 'lawyer-system.onrender.com']
+⋮----
+INSTALLED_APPS = [
+⋮----
+MIDDLEWARE = [
+⋮----
+ROOT_URLCONF = 'lawyer_system.urls'
+⋮----
+TEMPLATES = [
+⋮----
+WSGI_APPLICATION = 'lawyer_system.wsgi.application'
+⋮----
+DATABASE_URL = os.environ.get('DATABASE_URL')
+⋮----
+DATABASES = {
+⋮----
+AUTH_PASSWORD_VALIDATORS = [
+⋮----
+LANGUAGE_CODE = 'ru-ru'
+⋮----
+TIME_ZONE = 'Europe/Moscow'
+⋮----
+USE_I18N = True
+⋮----
+USE_L10N = True
+⋮----
+USE_TZ = True
+⋮----
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+⋮----
+STATICFILES_DIRS = [
+⋮----
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+⋮----
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+⋮----
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+⋮----
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'matrica646@gmail.com'
+EMAIL_HOST_PASSWORD = 'wxuo yyrp kbny nwdu'
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'matrica646@gmail.com'
+⋮----
+AUTH_USER_MODEL = 'accounts.CustomUser'
+⋮----
+AUTHENTICATION_BACKENDS = [
+⋮----
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+</file>
+
+<file path="lawyer_system/urls.py">
+urlpatterns = [
+</file>
+
+<file path="lawyer_system/views.py">
+def confirm_appointment(request, appointment_id)
+⋮----
+appointment = get_object_or_404(Appointment, id=appointment_id)
+⋮----
+email = EmailMessage(
+</file>
+
+<file path="lawyer_system/wsgi.py">
+application = get_wsgi_application()
+</file>
+
+<file path="modelrender/bdmodel.puml">
+@startuml Реляционная_Модель_БД_Записи_к_Юристу_v3
+
+' --- Настройки внешнего вида ---
+hide empty members
+skinparam linetype ortho
+skinparam shadowing false
+skinparam handwritten false
+' Убрана строка skinparam defaultFontName
+skinparam entity { 
+    BackgroundColor White
+    BorderColor #6C757D
+    HeaderBackgroundColor #6C757D
+    FontColor #333333
+    HeaderFontColor White
+    BorderThickness 1.5
+}
+skinparam arrow {
+    Color #333333
+    Thickness 1.5
+    FontColor #333333
+    FontSize 10
+}
+
+title Реляционная модель БД: Система записи к юристу (v3)
+
+' --- Сущности (представляющие таблицы) ---
+
+entity "clients" as Clients {
+  **client_id** : INTEGER <<PK>>
+  --
+  full_name : VARCHAR(255) <<NN>>
+  email : VARCHAR(254) <<UQ>> <<NN>>
+  phone : VARCHAR(20)
+}
+
+entity "lawyers" as Lawyers {
+  **lawyer_id** : INTEGER <<PK>>
+  --
+  full_name : VARCHAR(255) <<NN>>
+  email : VARCHAR(254) <<UQ>> <<NN>>
+  phone : VARCHAR(20)
+  office_address : VARCHAR(255)
+  specialization : VARCHAR(100)
+}
+
+entity "appointments" as Appointments {
+  **appointment_id** : INTEGER <<PK>>
+  --
+  client_id : INTEGER <<FK>> <<NN>> ' Внешний ключ к clients
+  lawyer_id : INTEGER <<FK>> <<NN>> ' Внешний ключ к lawyers
+  slot_id : INTEGER <<FK>> <<NN>>   ' Внешний ключ к calendar_slots
+  appointment_datetime : TIMESTAMP <<NN>>
+  status : VARCHAR(50) <<NN>>
+}
+
+entity "calendar_slots" as CalendarSlots {
+  **slot_id** : INTEGER <<PK>>
+  --
+  lawyer_id : INTEGER <<FK>> <<NN>> ' Внешний ключ к lawyers
+  start_time : TIMESTAMP <<NN>>
+  end_time : TIMESTAMP <<NN>>
+  is_booked : BOOLEAN <<NN>>
+}
+
+' --- Связи (Внешние ключи) ---
+
+Appointments }o--|| Clients : "client_id"
+Appointments }o--|| Lawyers : "lawyer_id"
+Appointments }o--|| CalendarSlots: "slot_id"
+CalendarSlots }o--|| Lawyers : "lawyer_id"
+
+' --- Легенда (опционально) ---
+legend left
+  | Обозначение | Значение |
+  |---|---|
+  | <<PK>> | Primary Key (Первичный ключ) |
+  | <<FK>> | Foreign Key (Внешний ключ) |
+  | <<UQ>> | Unique Constraint (Ограничение уникальности) |
+  | <<NN>> | Not Null Constraint (Не может быть NULL) |
+  | }o--|| | Связь "Многие к Одному" (Crow's Foot Notation) |
+end legend
+
+@enduml
+</file>
+
+<file path="modelrender/infomodel.puml">
+@startuml Инфологическая_Модель_Записи_к_Юристу
+
+' --- Настройки внешнего вида ---
+hide empty members
+skinparam linetype ortho
+skinparam shadowing false
+skinparam handwritten false ' Убирает "рукописный" стиль, если он включен по умолчанию
+skinparam defaultFontName "Roboto, Arial, sans-serif"
+skinparam entity {
+    BackgroundColor White
+    BorderColor #4682B4 ' Стальной синий для границ сущностей
+    HeaderBackgroundColor #4682B4
+    FontColor White
+    HeaderFontColor White
+    BorderThickness 1.5
+}
+skinparam arrow {
+    Color #333333
+    Thickness 1.5
+    FontColor #333333
+    FontSize 10
+}
+' Добавляем легенду для кардинальности, если нужно (закомментировано)
+' legend right
+'  | Обозначение | Значение |
+'  |---|---|
+'  | 1 | Ровно один |
+'  | 0..1 | Ноль или один |
+'  | * / 0..* | Ноль или больше |
+'  | 1..* | Один или больше |
+' end legend
+
+title Инфологическая модель: Система записи к юристу
+
+' --- Сущности ---
+
+entity "Клиент" as Client {
+  + Полное имя : Текст
+  + Email : Текст (Уникальный)
+  + Телефон : Текст
+  --
+  ' Можно добавить другие важные бизнес-атрибуты
+}
+
+entity "Юрист" as Lawyer {
+  + Полное имя : Текст
+  + Email : Текст (Уникальный)
+  + Телефон : Текст
+  + Адрес офиса : Текст
+  + Специализация : Текст ' Возможно, ссылка на справочник "Специализации"
+  --
+  ' Можно добавить Рейтинг, Опыт работы и т.д.
+}
+
+entity "Запись на приём" as Appointment {
+  + Дата и время : Дата/Время
+  + Статус : Текст (Напр., 'Запланирована', 'Завершена', 'Отменена')
+  --
+  ' Можно добавить Комментарий клиента, Тема консультации
+}
+
+entity "Слот в календаре" as CalendarSlot {
+  + Время начала : Дата/Время
+  + Время окончания : Дата/Время
+  + Забронирован? : Логический
+  --
+  ' Определяет доступность юриста
+}
+
+' --- Связи ---
+
+' Связь Клиента и Записи
+' Один Клиент может сделать ноль или много Записей.
+' Одна Запись делается ровно одним Клиентом.
+Client "1" -- "0..*" Appointment : < делает
+
+' Связь Юриста и Записи
+' Один Юрист может иметь ноль или много Записей.
+' Одна Запись относится ровно к одному Юристу.
+Lawyer "1" -- "0..*" Appointment : < принимает
+
+' Связь Юриста и Слота в календаре
+' Один Юрист определяет ноль или много Слотов.
+' Один Слот принадлежит ровно одному Юристу.
+Lawyer "1" -- "0..*" CalendarSlot : определяет >
+
+' Связь Записи и Слота в календаре
+' Одна Запись (если она существует и активна) занимает ровно один Слот.
+' Один Слот может быть занят не более чем одной Записью (0 или 1).
+Appointment "0..1" -- "1" CalendarSlot : > занимает
+
+@enduml
+</file>
+
+<file path="modelrender/model.dot">
+digraph model_graph {
+    // Общие настройки графа
+    graph [
+        label = "Диаграмма моделей Django\nПроект: Lawyer Appointment System (Пример)", // Добавлен заголовок
+        labelloc = "t", // Расположение заголовка сверху
+        fontname = "Roboto, Arial, sans-serif", // Добавлены запасные шрифты
+        fontsize = 12, // Увеличен размер шрифта заголовка
+        rankdir = TB, // Направление сверху вниз
+        splines = true, // Использовать сглаженные линии (можно заменить на 'ortho' для прямых углов)
+        concentrate = true, // Объединять параллельные ребра
+        nodesep = 0.6, // Расстояние между узлами на одном уровне
+        ranksep = 0.8, // Расстояние между уровнями
+        bgcolor = "#f8f9fa" // Легкий фон для графа
+        // bb="0,0,954.38,899.26", // Убрано, Graphviz вычислит сам
+    ];
+
+    // Общие настройки узлов (моделей)
+    node [
+        fontname = "Roboto, Arial, sans-serif",
+        fontsize = 9, // Немного увеличен базовый размер шрифта
+        shape = plaintext // Форма узла определяется HTML-лейблом
+    ];
+
+    // Общие настройки ребер (связей)
+    edge [
+        fontname = "Roboto, Arial, sans-serif",
+        fontsize = 8,
+        arrowsize = 0.8 // Немного уменьшен размер стрелок
+    ];
+
+    // Определения узлов (моделей) с улучшенными HTML-лейблами
+
+    // --- django.contrib.auth ---
+    subgraph cluster_auth {
+        label = "django.contrib.auth";
+        style = "filled";
+        color = "#e9f5ee"; // Светло-зеленый фон для группы
+        node [ node_color = "#1b563f" ]; // Цвет заголовка для этой группы
+
+        django_contrib_auth_models_AbstractUser [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>AbstractUser</B></FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(django.contrib.auth)<BR/><I>Наследует: AbstractBaseUser, PermissionsMixin</I></FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">date_joined</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">email</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">EmailField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">first_name</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">is_active</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">BooleanField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">is_staff</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">BooleanField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>is_superuser</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>BooleanField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><I>last_login</I></FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><I>DateTimeField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">last_name</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>password</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>CharField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">username</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+
+        django_contrib_auth_base_user_AbstractBaseUser [
+            label = <
+              <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+              <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+              <FONT FACE="Roboto, Arial, sans-serif" POINT-SIZE="10" COLOR="white"><B>AbstractBaseUser</B></FONT><BR/>
+              <FONT FACE="Roboto, Arial, sans-serif" POINT-SIZE="8" COLOR="#dddddd">(django.contrib.auth.base_user)</FONT>
+              </TD></TR>
+              </TABLE>
+            >
+        ];
+
+        django_contrib_auth_models_PermissionsMixin [
+            label = <
+              <TABLE BGCOLOR="white" BORDER="0" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+              <TR><TD COLSPAN="2" CELLPADDING="4" ALIGN="CENTER" BGCOLOR="#1b563f">
+              <FONT FACE="Roboto, Arial, sans-serif" POINT-SIZE="10" COLOR="white"><B>PermissionsMixin</B></FONT><BR/>
+               <FONT FACE="Roboto, Arial, sans-serif" POINT-SIZE="8" COLOR="#dddddd">(django.contrib.auth.models)</FONT>
+              </TD></TR>
+              </TABLE>
+            >
+        ];
+
+        django_contrib_auth_models_Permission [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>Permission</B></FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(django.contrib.auth)</FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>AutoField</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>content_type</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>ForeignKey (ContentType)</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">codename</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">name</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+
+        django_contrib_auth_models_Group [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#1b563f">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>Group</B></FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(django.contrib.auth)</FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>AutoField</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">name</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+    }
+
+    // --- django.contrib.contenttypes ---
+     subgraph cluster_contenttypes {
+        label = "django.contrib.contenttypes";
+        style = "filled";
+        color = "#e3f2fd"; // Светло-голубой фон для группы
+        node [ node_color = "#0277bd" ]; // Цвет заголовка для этой группы
+
+        django_contrib_contenttypes_models_ContentType [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#0277bd">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>ContentType</B></FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(django.contrib.contenttypes)</FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>AutoField</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">app_label</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">model</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+    }
+
+    // --- django.contrib.admin ---
+    subgraph cluster_admin {
+        label = "django.contrib.admin";
+        style = "filled";
+        color = "#f8f9fa"; // Светло-серый фон
+        node [ node_color = "#6c757d" ]; // Цвет заголовка
+
+        django_contrib_admin_models_LogEntry [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#6c757d">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>LogEntry</B></FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(django.contrib.admin)</FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>AutoField</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><B>content_type</B></FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><B>ForeignKey (ContentType)</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>user</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>ForeignKey (User)</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">action_flag</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">PositiveSmallIntegerField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">action_time</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">change_message</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">TextField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">object_id</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">TextField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">object_repr</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+    }
+
+    // --- django.contrib.sessions ---
+    subgraph cluster_sessions {
+        label = "django.contrib.sessions";
+        style = "filled";
+        color = "#e0f2f7"; // Очень светло-голубой
+        node [ node_color = "#00796b" ]; // Цвет заголовка
+
+        django_contrib_sessions_base_session_AbstractBaseSession [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#00796b">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>AbstractBaseSession</B></FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(django.contrib.sessions.base_session)</FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">expire_date</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">session_data</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">TextField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+
+        django_contrib_sessions_models_Session [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#00796b">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>Session</B></FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(django.contrib.sessions)<BR/><I>Наследует: AbstractBaseSession</I></FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I><B>session_key</B></I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I><B>CharField (Primary Key)</B></I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>expire_date</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>DateTimeField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>session_data</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>TextField</I></FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+    }
+
+    // --- Приложение: accounts ---
+    subgraph cluster_accounts {
+        label = "Приложение: accounts";
+        style = "filled";
+        color = "#e6e6fa"; // Светло-лавандовый
+        node [ node_color = "#4682b4" ]; // Стальной синий
+
+        accounts_models_CustomUser [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#4682b4">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>CustomUser</B> (Пользователь)</FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(accounts)<BR/><I>Наследует: AbstractUser</I></FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>BigAutoField</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>date_joined</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>DateTimeField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">email</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">EmailField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><I>first_name</I></FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><I>CharField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">full_name</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>is_active</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>BooleanField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>is_staff</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>BooleanField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>is_superuser</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>BooleanField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><I>last_login</I></FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><I>DateTimeField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><I>last_name</I></FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif"><I>CharField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><I>password</I></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><I>CharField</I></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">phone</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+
+        accounts_models_LawyerProfile [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#4682b4">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>LawyerProfile</B> (Профиль Юриста)</FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(accounts)</FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>BigAutoField</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>user</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>OneToOneField (CustomUser)</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">office_address</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">specialization</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+    }
+
+    // --- Приложение: appointments ---
+    subgraph cluster_appointments {
+        label = "Приложение: appointments";
+        style = "filled";
+        color = "#f3e5f5"; // Светло-фиолетовый
+        node [ node_color = "#8e24aa" ]; // Фиолетовый
+
+        appointments_models_Appointment [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#8e24aa">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>Appointment</B> (Запись на приём)</FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(appointments)</FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>BigAutoField</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>client</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>ForeignKey (CustomUser)</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>lawyer</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>ForeignKey (CustomUser)</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">created_at</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">date</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">status</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">CharField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">updated_at</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+
+        appointments_models_CalendarSlot [
+            label = <
+                <TABLE BGCOLOR="white" BORDER="1" CELLBORDER="0" CELLSPACING="0" STYLE="rounded">
+                <TR><TD COLSPAN="2" CELLPADDING="5" ALIGN="CENTER" BGCOLOR="#8e24aa">
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="white" POINT-SIZE="10"><B>CalendarSlot</B> (Слот в календаре)</FONT><BR/>
+                <FONT FACE="Roboto, Arial, sans-serif" COLOR="#dddddd" POINT-SIZE="8">(appointments)</FONT>
+                </TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>id</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>BigAutoField</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif"><B>lawyer</B></FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif"><B>ForeignKey (CustomUser)</B></FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">created_at</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">end_time</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">is_booked</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">BooleanField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT FACE="Roboto, Arial, sans-serif">start_time</FONT></TD><TD ALIGN="LEFT"><FONT FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                <TR><TD ALIGN="LEFT" BORDER="0"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">updated_at</FONT></TD><TD ALIGN="LEFT"><FONT COLOR="#7B7B7B" FACE="Roboto, Arial, sans-serif">DateTimeField</FONT></TD></TR>
+                </TABLE>
+            >
+        ];
+    }
+
+
+    // Определения ребер (связей)
+
+    // --- Наследование ---
+    django_contrib_auth_models_AbstractUser -> django_contrib_auth_base_user_AbstractBaseUser [
+        arrowhead = empty, tailclip = false, dir = both, style=dashed, color="#555555",
+        label = " абстрактное\n наследование"
+    ];
+    django_contrib_auth_models_AbstractUser -> django_contrib_auth_models_PermissionsMixin [
+        arrowhead = empty, tailclip = false, dir = both, style=dashed, color="#555555",
+        label = " абстрактное\n наследование"
+    ];
+    accounts_models_CustomUser -> django_contrib_auth_models_AbstractUser [
+        arrowhead = empty, tailclip = false, dir = both, style=dashed, color="#555555",
+        label = " абстрактное\n наследование"
+    ];
+     django_contrib_sessions_models_Session -> django_contrib_sessions_base_session_AbstractBaseSession [
+        arrowhead = empty, tailclip = false, dir = both, style=dashed, color="#555555",
+        label = " абстрактное\n наследование"
+    ];
+
+    // --- Связи ForeignKey ---
+    django_contrib_auth_models_Permission -> django_contrib_contenttypes_models_ContentType [
+        arrowhead = none, arrowtail = crow, dir = both, color="#0277bd", // Цвет связи ContentType
+        label = " content_type"
+    ];
+    django_contrib_admin_models_LogEntry -> django_contrib_contenttypes_models_ContentType [
+        arrowhead = none, arrowtail = crow, dir = both, color="#0277bd",
+        label = " content_type", constraint=false // constraint=false может помочь с пересечениями
+    ];
+    django_contrib_admin_models_LogEntry -> accounts_models_CustomUser [
+        arrowhead = none, arrowtail = crow, dir = both, color="#4682b4", // Цвет связи User
+        label = " user"
+    ];
+    appointments_models_Appointment -> accounts_models_CustomUser [
+        arrowhead = none, arrowtail = crow, dir = both, color="#4682b4",
+        label = " client\n(клиент)"
+    ];
+    appointments_models_Appointment -> accounts_models_CustomUser [
+        arrowhead = none, arrowtail = crow, dir = both, color="#4682b4",
+        label = " lawyer\n(юрист)"
+    ];
+     appointments_models_CalendarSlot -> accounts_models_CustomUser [
+        arrowhead = none, arrowtail = crow, dir = both, color="#4682b4",
+        label = " lawyer\n(юрист)"
+    ];
+
+    // --- Связи ManyToMany ---
+    accounts_models_CustomUser -> django_contrib_auth_models_Permission [
+        arrowhead = crow, arrowtail = crow, dir = both, color="#1b563f", // Цвет связи Auth
+        label = " user_permissions"
+    ];
+    accounts_models_CustomUser -> django_contrib_auth_models_Group [
+        arrowhead = crow, arrowtail = crow, dir = both, color="#1b563f",
+        label = " groups"
+    ];
+    django_contrib_auth_models_Group -> django_contrib_auth_models_Permission [
+        arrowhead = crow, arrowtail = crow, dir = both, color="#1b563f",
+        label = " permissions"
+    ];
+
+    // --- Связи OneToOne ---
+    accounts_models_LawyerProfile -> accounts_models_CustomUser [
+        arrowhead = none, arrowtail = icurve, dir = both, color="#4682b4", // icurve для OneToOne
+        label = " user\n(1-к-1)"
+    ];
+
+    // Указание рангов для лучшего вертикального выравнивания (опционально)
+    { rank=min; django_contrib_auth_base_user_AbstractBaseUser; django_contrib_auth_models_PermissionsMixin; django_contrib_contenttypes_models_ContentType; }
+    { rank=same; django_contrib_auth_models_AbstractUser; django_contrib_auth_models_Group; django_contrib_auth_models_Permission; django_contrib_sessions_base_session_AbstractBaseSession; }
+    { rank=same; accounts_models_CustomUser; }
+    { rank=max; accounts_models_LawyerProfile; django_contrib_admin_models_LogEntry; appointments_models_Appointment; appointments_models_CalendarSlot; django_contrib_sessions_models_Session; }
+}
+</file>
+
+<file path="modelrender/render.py">
+dot_string = """
+⋮----
+output_filename = "model_diagram_rendered.png"
+output_format = "png"
+layout_engine = "dot"
+⋮----
+def render_graph(dot_code, filename, format, engine)
+⋮----
+G = pgv.AGraph(string=dot_code, strict=False, directed=True)
+⋮----
+# print("\nТакже сгенерирован SVG файл.")
+</file>
+
+<file path="static/js/app.js">
+function showTemporaryMessage(message, type = 'info') {
+console.log(`Attempting to show message: "${message}", type: ${type}`);
+const container = document.querySelector('.messages-container');
+⋮----
+console.error('Messages container (.messages-container) not found in the DOM!');
+alert(`${type.toUpperCase()}: ${message}`);
+⋮----
+const messageId = `temp-msg-${Date.now()}`;
+⋮----
+container.insertAdjacentHTML('afterbegin', alertHTML);
+⋮----
+console.log(`Message HTML inserted with ID: ${messageId}`);
+const newAlert = document.getElementById(messageId);
+⋮----
+console.log(`Setting timeout for ${disappearTimeout}ms to dismiss message ${messageId}`);
+⋮----
+setTimeout(() => {
+console.log(`Attempting to dismiss message ${messageId}`);
+const elementExists = document.getElementById(messageId);
+⋮----
+elementExists.classList.add('fade-out');
+⋮----
+elementExists.addEventListener('transitionend', () => {
+⋮----
+if(document.body.contains(elementExists)) {
+const alertInstance = bootstrap.Alert.getOrCreateInstance(elementExists);
+⋮----
+console.log(`Closing alert instance for ${messageId}`);
+alertInstance.close();
+⋮----
+console.warn('Could not get Bootstrap Alert instance. Removing element directly.');
+elementExists.remove();
+⋮----
+console.error('Error dismissing Bootstrap alert:', e);
+⋮----
+console.log(`Element ${messageId} already removed before timeout.`);
+⋮----
+console.error('Could not find the newly added alert element by ID:', messageId);
+⋮----
+document.addEventListener('DOMContentLoaded', function() {
+⋮----
+const djangoMessageAlerts = document.querySelectorAll('.messages-container .alert:not([id^="temp-msg-"])');
+⋮----
+djangoMessageAlerts.forEach(el => {
+el.classList.add('fade-out');
+el.addEventListener('transitionend', () => {
+if(document.body.contains(el)) {
+const alertInstance = bootstrap.Alert.getOrCreateInstance(el);
+if (alertInstance) alertInstance.close();
+else el.remove();
+</file>
+
+<file path="static/calendar.css">
+:root {
+⋮----
+.calendar-container,
+⋮----
+.calendar-navigation {
+#month-header {
+.calendar-navigation .btn {
+⋮----
+.lawyer-controls {
+.lawyer-controls .btn {
+⋮----
+.weekdays-row {
+⋮----
+#calendar-grid {
+#calendar-grid .col {
+⋮----
+.calendar-day {
+.calendar-day span {
+.calendar-day.empty {
+.calendar-day:not(.empty):not(.past-day):hover {
+⋮----
+.calendar-day.available-day {
+.calendar-day.available-day:hover {
+⋮----
+.calendar-day.selected-day {
+⋮----
+.calendar-day.past-day {
+.calendar-day.past-day:hover {
+⋮----
+.calendar-day.today {
+.calendar-day.today.selected-day {
+⋮----
+.calendar-day.no-slots-day {
+⋮----
+.calendar-day.no-slots-day:hover {
+⋮----
+.slot-indicator {
+.selected-day .slot-indicator {
+⋮----
+#time-slots.time-slots-card {
+⋮----
+#selected-date.selected-date-header {
+⋮----
+#choose-time-label {
+#choose-time-label i {
+⋮----
+.time-group {
+⋮----
+.time-header {
+⋮----
+.time-slots-grid {
+⋮----
+.time-slot-btn {
+⋮----
+.time-slot-btn:hover, .time-slot-btn:focus {
+⋮----
+.time-slot-btn.active {
+⋮----
+#confirm-btn {
+#confirm-btn:hover {
+#confirm-btn.btn-danger:hover {
+#add-time-btn {
+⋮----
+#createSlotForm.create-slot-card {
+#createSlotForm .card-body {
+#createSlotForm .card-title {
+#createSlotForm label {
+#createSlotForm .form-select {
+#createSlotForm .form-select:focus {
+#createSlotForm .btn {
+⋮----
+.weekdays-row { font-size: 0.95rem; }
+#month-header { font-size: 1.8rem; }
+⋮----
+.weekdays-row { font-size: 0.9rem; padding: 0.7rem 0; }
+.slot-indicator { width: 8px; height: 8px; bottom: 9px;}
+.time-slots-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 0.6rem;}
+.time-slot-btn { font-size: 0.9rem; padding: 0.6rem 0.4rem; }
+.calendar-container, .container.calendar-page { padding: 1.5rem; }
+⋮----
+#month-header { font-size: 1.6rem; }
+.calendar-day { min-height: 80px; font-size: 0.9rem; }
+.weekdays-row { font-size: 0.85rem; padding: 0.6rem 0; }
+.slot-indicator { width: 7px; height: 7px; bottom: 8px;}
+.time-slots-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+.time-slot-btn { font-size: 0.85rem; padding: 0.5rem 0.3rem; }
+#time-slots.time-slots-card { padding: 1.2rem; }
+⋮----
+#selected-date.selected-date-header { font-size: 1.2rem; }
+.calendar-container, .container.calendar-page { padding: 1rem; border-radius: 8px;}
+#createSlotForm.create-slot-card { max-width: 95%; }
+#createSlotForm .card-body { padding: 1.5rem; }
+⋮----
+#month-header { font-size: 1.4rem; }
+.calendar-day { min-height: 65px; font-size: 0.85rem; border-radius: 6px;}
+.weekdays-row { font-size: 0.8rem; padding: 0.5rem 0; border-radius: 6px;}
+.slot-indicator { width: 6px; height: 6px; bottom: 7px;}
+.time-slots-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.time-slot-btn { font-size: 0.8rem; padding: 0.4rem 0.2rem; border-radius: 4px;}
+#selected-date.selected-date-header { font-size: 1.1rem; }
+#confirm-btn { font-size: 0.95rem; padding: 0.6rem 1rem; }
+⋮----
+.calendar-container, .container.calendar-page { padding: 0.8rem; border-radius: 6px;}
+#time-slots.time-slots-card { padding: 1rem; border-radius: 8px;}
+.time-group { padding: 0.8rem; }
+.time-header { font-size: 0.85rem; margin-bottom: 0.7rem; }
+#createSlotForm .card-body { padding: 1.2rem; }
+</file>
+
+<file path="static/site.webmanifest">
+{"name":"","short_name":"","icons":[{"src":"/android-chrome-192x192.png","sizes":"192x192","type":"image/png"},{"src":"/android-chrome-512x512.png","sizes":"512x512","type":"image/png"}],"theme_color":"#ffffff","background_color":"#ffffff","display":"standalone"}
+</file>
+
+<file path="static/styles.css">
+body {
+⋮----
+.navbar {
+.navbar-brand {
+⋮----
+.navbar-brand:hover {
+⋮----
+.navbar-brand:hover i {
+⋮----
+.navbar-brand i {
+⋮----
+.navbar-brand:after {
+⋮----
+.navbar-brand:hover:after {
+⋮----
+/* --- Buttons --- */
+.btn {
+⋮----
+.btn:hover {
+⋮----
+.btn .bi {
+⋮----
+top: -1px; /* Подстройка иконки в кнопке */
+⋮----
+/* --- Links & General Interactivity --- */
+a, button, input, select, textarea {
+⋮----
+/* --- Messages --- */
+.messages-container {
+⋮----
+.message-box {
+⋮----
+.message-box::before {
+⋮----
+.message-box .message-text {
+⋮----
+.fade-out {
+⋮----
+.card {
+⋮----
+.card:hover {
+⋮----
+.card-header {
+⋮----
+.card-header.bg-dark, .card-header.bg-primary, .card-header.bg-secondary {
+⋮----
+.card-body {
+⋮----
+.container.mt-4 {
+⋮----
+.page-title {
+.page-subtitle {
+⋮----
+.list-item-icon {
+.list-item-icon .bi {
+.list-item-icon span {
+⋮----
+.notification-link {
+⋮----
+.notification-link .bi-bell-fill {
+⋮----
+.notification-link:hover .bi-bell-fill,
+</file>
+
+<file path="templates/accounts/client_profile.html">
+{% extends 'base.html' %}
+{% load custom_filters %} {# Убедитесь, что ваш фильтр filename загружен #}
+
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <h2 class="mb-4 text-center">Профиль пользователя</h2>
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3 text-primary text-center">{{ user.full_name }}</h5>
+            <div class="user-info text-center">
+                <p class="mb-2"><i class="bi bi-envelope me-2"></i><strong>Email:</strong> {{ user.email }}</p>
+                <p class="mb-2"><i class="bi bi-telephone me-2"></i><strong>Телефон:</strong> {{ user.phone }}</p>
+            </div>
+            <a href="{% url 'accounts:edit_profile' %}" class="btn btn-outline-primary mt-3 w-100">
+                <i class="bi bi-pencil-square me-2"></i>Редактировать профиль
+            </a>
+        </div>
+    </div>
+
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h4 class="mb-3">Мои общие документы</h4>
+            {% if general_documents %}
+                <ul class="list-unstyled">
+                {% for doc in general_documents %}
+                    <li class="mb-2">
+                        <i class="bi bi-file-earmark-text me-1"></i>
+                        <a href="{% url 'appointments:download_general_document' doc.id %}">{{ doc.document.name|filename }}</a>
+                        <small class="text-muted"> ({{ doc.uploaded_at|date:"d.m.Y H:i" }})</small>
+                        {% if doc.description %} - <em class="text-muted small">{{ doc.description }}</em>{% endif %}
+                        {# Здесь можно добавить кнопку для удаления общего документа, если нужно #}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">Общие документы не загружены.</p>
+            {% endif %}
+
+            <h5 class="mt-4 mb-3">Загрузить новый общий документ</h5>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ general_document_form.as_p }}
+                <button type="submit" name="upload_general_document" class="btn btn-primary btn-sm mt-2">Загрузить общий документ</button>
+        </div>
+    </div>
+
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="mb-4 text-center">История записей</h4>
+            {% if appointments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-center">Дата и время</th>
+                            <th scope="col" class="text-center">Статус</th>
+                            <th scope="col" class="text-center">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                        <tr>
+                            <td class="text-center align-middle">
+                                <a href="{% url 'appointments:appointment_detail' appointment.id %}">
+                                    {{ appointment.date|date:"d.m.Y H:i" }}
+                                </a>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="status-badge {{ appointment.status|lower }}">
+                                    {{ appointment.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-center align-middle">
+                                <a href="{% url 'appointments:appointment_detail' appointment.id %}" class="btn btn-sm btn-info mb-1">Детали</a>
+                                {% if appointment.can_cancel %}
+                                    <a href="{% url 'appointments:cancel_appointment_client' appointment.id %}" class="btn btn-sm btn-warning mb-1">Отменить</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {# Документы, прикрепленные к этой записи - больше не отображаем здесь, а на странице деталей #}
+                        {% if appointment.attached_documents %}
+                        <tr>
+                            <td colspan="3" style="padding-left: 30px;">
+                                <small class="text-muted">Документы к этой записи:</small>
+                                <ul class="list-inline mb-0">
+                                    {% for doc in appointment.attached_documents %}
+                                    <li class="list-inline-item">
+                                        <a href="{% url 'appointments:download_appointment_document' doc.id %}" class="badge bg-light text-dark text-decoration-none">
+                                            <i class="bi bi-paperclip"></i> {{ doc.document.name|filename }}
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-calendar-x fs-1 mb-3"></i>
+                <p class="mb-0">Нет активных записей</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.status-badge { padding: 0.3em 0.6em; border-radius: 0.25rem; font-size: 0.85em; }
+.status-badge.pending { background-color: #ffc107; color: #000; }
+.status-badge.approved { background-color: #198754; color: #fff; }
+.status-badge.rejected { background-color: #dc3545; color: #fff; }
+.card {
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.user-info p {
+    color: #475569;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.table-responsive {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.5rem;
+    background-color: white;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead {
+    background-color: #f8f9fa;
+    border: 1px solid #e2e8f0;
+}
+
+.table th {
+    font-weight: 600;
+    color: #475569;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+}
+
+.table td {
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.status-badge.pending {
+    background-color: rgba(234, 179, 8, 0.2);
+    color: rgb(161, 98, 7);
+}
+
+.status-badge.rejected {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: rgb(185, 28, 28);
+}
+
+.status-badge.approved {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: rgb(21, 128, 61);
+}
+
+@media (max-width: 576px) {
+    .table thead {
+        display: none;
+    }
+
+    .table, .table tbody, .table tr, .table td {
+        display: block;
+        width: 100%;
+    }
+
+    .table tr {
+        margin-bottom: 1rem;
+        padding: 0.5rem;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        border: 1px solid #e2e8f0;
+    }
+
+    .table td {
+        text-align: left;
+        padding: 0.5rem;
+        border: none;
+    }
+
+    .table td:first-child {
+        font-weight: 500;
+        color: #475569;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/accounts/edit_profile.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Редактировать личную информацию</h2>
+    <form method="post" class="p-4 rounded shadow-sm" style="background: #f8f9fa; max-width: 500px; margin: 0 auto;">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="mb-3">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-success">Сохранить изменения</button>
+        <a href="{% url 'accounts:client_profile' %}" class="btn btn-secondary ms-2">Отмена</a>
+    </form>
+</div>
+
+
+{# CSS стили, специфичные для этой страницы. Лучше перенести в отдельный CSS файл (например, account.css) #}
+<style>
+.profile-edit-field {
+    /* Эти стили должны применяться к полям формы, убедитесь, что они имеют этот класс */
+    /* Если поля формы генерируются без этого класса, вам нужно добавить его в форму или использовать более общий селектор */
+    /* Например: form input[type="text"], form input[type="email"], form textarea { ... стили ... } */
+    background: #fff !important;
+    border: 2px solid #475569 !important;
+    font-weight: 500;
+    box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.1);
+}
+
+.profile-edit-field:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+form input[type="text"],
+form input[type="email"],
+form textarea,
+form select {
+    /* Добавляем стили ко всем стандартным полям формы */
+    background: #fff;
+    border: 1px solid #ced4da; /* Стандартная граница Bootstrap */
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+form input[type="text"]:focus,
+form input[type="email"]:focus,
+form textarea:focus,
+form select:focus {
+    border-color: #86b7fe; /* Стандартный фокус Bootstrap */
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+
+@media (max-width: 576px) {
+    form {
+        padding: 0.8rem; /* Уменьшаем padding формы на мобильных */
+    }
+    form label,
+    form input,
+    form textarea,
+    form select,
+    .btn {
+        font-size: 0.95rem; /* Немного уменьшаем шрифт */
+    }
+    .btn {
+        padding: 0.4rem 0.6rem; /* Уменьшаем padding кнопок */
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/appointments/add_time_slot.html">
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2>Add Time Slot for {{ date }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Time Slot</button>
+    </form>
+    <style>
+    @media (max-width: 576px) {
+        form {
+            font-size: 0.97rem;
+        }
+        button {
+            font-size: 0.97rem;
+            padding: 8px 10px;
+        }
+    }
+    </style>
+{% endblock %}
+</file>
+
+<file path="templates/appointments/appointment_detail.html">
+appointment_detail.html{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 700px;">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Детали записи #{{ appointment.id }}</h3>
+        </div>
+        <div class="card-body">
+            <p><strong>Дата и время:</strong> {{ appointment.date|date:"l, d F Y, H:i" }}</p>
+            <p><strong>Юрист:</strong> {{ appointment.lawyer.full_name }}</p>
+            <p><strong>Статус:</strong>
+                <span class="status-badge {{ appointment.status|lower }}">
+                    {{ appointment.get_status_display }}
+                </span>
+            </p>
+
+            {% if can_cancel %}
+            <div class="my-3">
+                <a href="{% url 'appointments:cancel_appointment_client' appointment.id %}" class="btn btn-warning">
+                    <i class="bi bi-calendar-x"></i> Отменить запись
+                </a>
+            </div>
+            {% endif %}
+
+            <hr>
+
+            <h4 class="mt-4 mb-3">Документы к этой записи</h4>
+            {% if documents %}
+                <ul class="list-unstyled">
+                {% for doc in documents %}
+                    <li class="mb-2">
+                        <i class="bi bi-file-earmark-text me-1"></i>
+                        <a href="{% url 'appointments:download_appointment_document' doc.id %}">{{ doc.document.name|filename }}</a>
+                        <small class="text-muted"> ({{ doc.uploaded_at|date:"d.m.Y H:i" }})</small>
+                        {% if doc.description %} - <em class="text-muted small">{{ doc.description }}</em>{% endif %}
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">К этой записи документы не прикреплены.</p>
+            {% endif %}
+
+            <h5 class="mt-4 mb-3">Прикрепить новый документ к этой записи</h5>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ upload_form.as_p }}
+                <button type="submit" class="btn btn-success btn-sm mt-2">
+                    <i class="bi bi-upload"></i> Прикрепить документ
+                </button>
+            </form>
+
+            <div class="mt-4">
+                <a href="{% url 'accounts:client_profile' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left-circle"></i> Назад к профилю
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    /* Скопируйте или подключите стили для status-badge сюда, если они еще не глобальные */
+    .status-badge { padding: 0.3em 0.6em; border-radius: 0.25rem; font-size: 0.85em; }
+    .status-badge.pending { background-color: #ffc107; color: #000; }
+    .status-badge.approved { background-color: #198754; color: #fff; }
+    .status-badge.rejected { background-color: #dc3545; color: #fff; }
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/appointments/calendar.html">
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+{# Переносим ссылку на CSS сюда, чтобы она была в head #}
+<link rel="stylesheet" href="{% static 'calendar.css' %}?v=2"> {# Добавлен параметр для сброса кеша #}
+{% endblock %}
+
+{% block content %}
+<div class="messages-container"></div>
+{% csrf_token %}
+<div class="container calendar-container"> {# Добавлен класс для специфичных стилей контейнера, если нужно #}
+
+    {# --- Заголовок и Навигация --- #}
+    <div class="d-flex justify-content-between align-items-center mb-4 calendar-navigation">
+        <button class="btn btn-outline-primary btn-sm" onclick="changeMonth(-1)">« Предыдущий месяц</button> {# Уменьшил кнопки #}
+        {# Заменили h2 на h1 #}
+        <h1 class="text-center mb-0 month-header" id="month-header"></h1>
+        <button class="btn btn-outline-primary btn-sm" onclick="changeMonth(1)">Следующий месяц »</button> {# Уменьшил кнопки #}
+    </div>
+
+    {# --- Управление для Юриста --- #}
+    {% if user.lawyerprofile %}
+    <div class="lawyer-controls mb-3 text-center">
+        <a href="{% url 'appointments:generate_slots_days' %}" class="btn btn-primary btn-sm mb-2">
+           <i class="bi bi-calendar-plus me-1"></i> Генерировать по дням
+        </a>
+        <button id="deleteAllSlotsBtn" class="btn btn-danger btn-sm mb-2">
+            <i class="bi bi-trash3 me-1"></i> Удалить все слоты
+        </button>
+    </div>
+    {% endif %}
+
+
+    {# --- Дни Недели --- #}
+    <div class="row row-cols-7 weekdays-row g-2 mb-2"> {# Убрал mb-2, добавил g-1 как у сетки #}
+        <div class="col text-center fw-bold">Пн</div>
+        <div class="col text-center fw-bold">Вт</div>
+        <div class="col text-center fw-bold">Ср</div>
+        <div class="col text-center fw-bold">Чт</div>
+        <div class="col text-center fw-bold">Пт</div>
+        <div class="col text-center fw-bold">Сб</div>
+        <div class="col text-center fw-bold">Вс</div>
+    </div>
+
+    {# --- Сетка Календаря --- #}
+    <div id="calendar-grid">
+        {# Генерируется JavaScript #}
+    </div>
+
+    {# --- Блок Выбора Времени (изначально скрыт) --- #}
+    <div id="time-slots" class="mt-4 card time-slots-card d-none"> {# Добавлен d-none, убран inline style #}
+        <div class="card-body">
+            <h4 class="card-title selected-date-header" id="selected-date"></h4>
+            <div id="choose-time-label" class="mb-3 text-primary fw-bold d-none"> {# Добавлен d-none #}
+                <i class="bi bi-clock me-1"></i> Выберите время для записи:
+            </div>
+            <div id="slot-list" class="mb-3">
+                {# Генерируется JavaScript #}
+            </div>
+            {# Кнопки действия для слота #}
+            {% if user.lawyerprofile %}
+                <button id="confirm-btn" class="btn btn-danger w-100 mb-3 d-none" onclick="deleteSlot(selectedSlotId)">
+                    <i class="bi bi-trash me-1"></i> Удалить выбранный слот
+                </button>
+                <button id="add-time-btn" class="btn btn-primary w-100" onclick="openCreateSlotModal(selectedDateForSlot)">
+                   <i class="bi bi-plus-circle me-1"></i> Добавить время на этот день
+                </button>
+            {% else %}
+                <button id="confirm-btn" class="btn btn-success w-100 mb-3 d-none" onclick="bookSlot(selectedSlotId)">
+                   <i class="bi bi-check-circle me-1"></i> Записаться на выбранное время
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {# --- Форма Создания Слота (изначально скрыта) --- #}
+    {% if user.lawyerprofile %}
+    <div id="createSlotForm" class="card mt-3 create-slot-card d-none"> {# Добавлен d-none, класс, убран inline style #}
+        <div class="card-body p-4">
+            <h5 class="card-title mb-4 text-center">Создание слота на <span id="selectedDateDisplay" class="text-primary"></span></h5>
+             <label for="slotStartTime" class="form-label mb-1">Выберите время:</label>
+            <select id="slotStartTime" class="form-select form-select-sm mb-3">
+                <option value="" selected disabled>-- Время --</option> {# Улучшен плейсхолдер #}
+                <option value="09:00">09:00</option>
+                <option value="09:30">09:30</option>
+                <option value="10:00">10:00</option>
+                <option value="10:30">10:30</option>
+                <option value="11:00">11:00</option>
+                <option value="11:30">11:30</option>
+                <option value="12:00">12:00</option>
+                <option value="12:30">12:30</option>
+                <option value="13:00">13:00</option>
+                <option value="13:30">13:30</option>
+                <option value="14:00">14:00</option>
+                <option value="14:30">14:30</option>
+                <option value="15:00">15:00</option>
+                <option value="15:30">15:30</option>
+                <option value="16:00">16:00</option>
+                <option value="16:30">16:30</option>
+                <option value="17:00">17:00</option>
+                 <option value="17:30">17:30</option> {# Добавил еще время #}
+                 <option value="18:00">18:00</option>
+            </select>
+            <div class="d-flex justify-content-between gap-2">
+                <button type="button" class="btn btn-secondary btn-sm flex-grow-1" onclick="hideCreateSlotForm()">
+                    <i class="bi bi-x-lg me-1"></i> Отмена
+                </button>
+                <button type="button" class="btn btn-primary btn-sm flex-grow-1" onclick="createSlot()">
+                    <i class="bi bi-check-lg me-1"></i> Создать слот
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div> {# end .container #}
+
+{# --- Модальное окно подтверждения удаления --- #}
+{% if user.lawyerprofile %}
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"> {# Центрирование #}
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="lead">Вы действительно хотите удалить **все** доступные для записи слоты?</p>
+                <p class="text-danger fw-bold" id="deleteCountdown"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                   <i class="bi bi-trash3-fill me-1"></i> Удалить все
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# УДАЛИТЕ <style> ... </style> ОТСЮДА ПОЛНОСТЬЮ #}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isLawyer = {{ user.lawyerprofile|yesno:"true,false" }};
+        let slotsData = JSON.parse('{{ slots_json|escapejs }}');
+        // Используем текущую дату из Django, если она передана и валидна, иначе текущую дату клиента
+        let initialDateStr = '{{ current_date|default:"" }}';
+        let currentDate;
+        try {
+            if (initialDateStr) {
+                currentDate = new Date(initialDateStr);
+                // Проверка на Invalid Date
+                if (isNaN(currentDate.getTime())) {
+                    console.warn('Invalid date from Django, using client date.');
+                    currentDate = new Date();
+                }
+            } else {
+                currentDate = new Date();
+            }
+        } catch (e) {
+            console.error('Error parsing date, using client date:', e);
+            currentDate = new Date();
+        }
+        currentDate.setDate(1); // Всегда начинаем с первого числа месяца
+
+        window.selectedSlotId = null;
+        window.selectedDateForSlot = null; // Хранит YYYY-MM-DD
+
+        const monthNames = [
+            "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+            "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+        ];
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // --- Элементы DOM ---
+        const monthHeaderEl = document.getElementById('month-header');
+        const calendarGridEl = document.getElementById('calendar-grid');
+        const timeSlotsEl = document.getElementById('time-slots');
+        const selectedDateHeaderEl = document.getElementById('selected-date');
+        const chooseTimeLabelEl = document.getElementById('choose-time-label');
+        const slotListEl = document.getElementById('slot-list');
+        const confirmBtnEl = document.getElementById('confirm-btn');
+        const addTimeBtnEl = document.getElementById('add-time-btn'); // Может быть null для клиента
+        const createSlotFormEl = document.getElementById('createSlotForm'); // Может быть null для клиента
+        const selectedDateDisplayEl = document.getElementById('selectedDateDisplay'); // Может быть null для клиента
+        const slotStartTimeSelectEl = document.getElementById('slotStartTime'); // Может быть null для клиента
+        const deleteAllSlotsBtnEl = document.getElementById('deleteAllSlotsBtn'); // Может быть null для клиента
+        const confirmDeleteModalEl = document.getElementById('confirmDeleteModal'); // Может быть null для клиента
+        const confirmDeleteBtnEl = document.getElementById('confirmDeleteBtn'); // Может быть null для клиента
+        const deleteCountdownEl = document.getElementById('deleteCountdown'); // Может быть null для клиента
+
+        // --- Основная функция генерации календаря ---
+        function initCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth(); // 0-11
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Обнуляем время для сравнения только дат
+
+            // Обновление заголовка
+            if (monthHeaderEl) {
+                monthHeaderEl.textContent = `${monthNames[month]} ${year}`;
+            }
+
+            // Генерация сетки
+            let calendarHTML = '<div class="row row-cols-7 g-2">'; // Используем g-2
+            let dayOfWeekCounter = 0;
+
+            const startDayIndex = (firstDayOfMonth.getDay() + 6) % 7;
+            for (let i = 0; i < startDayIndex; i++) {
+                calendarHTML += '<div class="col p-0"><div class="calendar-day empty"></div></div>';
+                dayOfWeekCounter++;
+            }
+
+            // Заполнение дней месяца
+            for (let day = 1; day <= lastDayOfMonth.getDate(); day++) {
+
+                // --- ФОРМИРОВАНИЕ dateString (Правильный метод) ---
+                const monthString = String(month + 1).padStart(2, '0');
+                const dayString = String(day).padStart(2, '0');
+                const dateString = `${year}-${monthString}-${dayString}`; // YYYY-MM-DD в локальном контексте
+                // ---------------------------------------------
+
+                // Создаем объект Date для сравнений isPast и today
+                const currentDayDate = new Date(year, month, day);
+                const isPast = currentDayDate.getTime() < today.getTime();
+
+                // --- ПРОВЕРКА hasAvailableSlots (Исправленная - сравнение строк) ---
+                const hasAvailableSlots = slotsData.some(s => {
+                    try {
+                        const slotStartTime = new Date(s.fields.start_time); // Дата слота
+
+                        // Получаем YYYY-MM-DD слота В ЛОКАЛЬНОМ времени браузера
+                        const slotDateStringLocal = slotStartTime.getFullYear() + '-' +
+                                               String(slotStartTime.getMonth() + 1).padStart(2, '0') + '-' +
+                                               String(slotStartTime.getDate()).padStart(2, '0');
+
+                        // Сравниваем строки YYYY-MM-DD
+                        return slotDateStringLocal === dateString && !s.fields.is_booked;
+                    } catch(e) {
+                         console.error(`Error parsing slot date in initCalendar for slot PK ${s.pk}:`, e);
+                         return false;
+                    }
+                });
+                // --- КОНЕЦ ПРОВЕРКИ ---
+
+
+                let dayClasses = 'calendar-day';
+                let clickHandler = '';
+                let indicatorHTML = '';
+
+                if (isPast) {
+                    dayClasses += ' past-day';
+                } else {
+                     clickHandler = `onclick="showTimeSlots('${dateString}', this)"`; // Передаем правильную dateString
+                     if (hasAvailableSlots) {
+                        dayClasses += ' available-day'; // Класс для доступных дней
+                        indicatorHTML = '<div class="slot-indicator"></div>'; // Индикатор
+                     } else {
+                        dayClasses += ' no-slots-day';
+                     }
+                }
+                // Сравнение с today
+                 if (currentDayDate.getFullYear() === today.getFullYear() &&
+                     currentDayDate.getMonth() === today.getMonth() &&
+                     currentDayDate.getDate() === today.getDate()) {
+                    dayClasses += ' today';
+                 }
+
+                // Собираем HTML для ячейки дня (используем правильную dateString)
+                calendarHTML += `
+                    <div class="col p-0">
+                        <div class="${dayClasses}" data-date="${dateString}" ${clickHandler}>
+                            <span>${day}</span>
+                            ${indicatorHTML}
+                        </div>
+                    </div>`;
+
+                dayOfWeekCounter++;
+                // Используем g-2
+                if (dayOfWeekCounter % 7 === 0 && day < lastDayOfMonth.getDate()) {
+                    calendarHTML += '</div><div class="row row-cols-7 g-2">';
+                }
+            }
+
+            // Добавление пустых ячеек в конце
+            while (dayOfWeekCounter % 7 !== 0) {
+                calendarHTML += '<div class="col p-0"><div class="calendar-day empty"></div></div>';
+                dayOfWeekCounter++;
+            }
+
+            if (calendarGridEl) {
+                calendarGridEl.innerHTML = calendarHTML + '</div>'; // Закрываем последнюю строку
+            }
+            // Скрываем другие блоки при перерисовке календаря
+            if (timeSlotsEl) timeSlotsEl.classList.add('d-none');
+            if (createSlotFormEl) createSlotFormEl.classList.add('d-none');
+        }
+
+        // --- Функция загрузки слотов ---
+        async function loadSlots(year, month) { // month здесь 1-12
+            try {
+                console.log(`Loading slots for ${year}-${month}`);
+                const response = await fetch(`/appointments/slots/?year=${year}&month=${month}`, {
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Accept': 'application/json',
+                    }
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                slotsData = JSON.parse(data.slots);
+                console.log(`Loaded ${slotsData.length} slots for ${year}-${month}`);
+                initCalendar(); // Перерисовать календарь с новыми данными
+            } catch (error) {
+                console.error('Error loading slots:', error);
+                if (calendarGridEl) {
+                     calendarGridEl.innerHTML = '<div class="alert alert-danger">Ошибка загрузки данных календаря.</div>';
+                }
+            }
+        }
+
+        // --- Смена месяца ---
+        window.changeMonth = function(offset) {
+            currentDate.setMonth(currentDate.getMonth() + offset);
+            // Важно: месяц для API должен быть 1-12
+            loadSlots(currentDate.getFullYear(), currentDate.getMonth() + 1);
+        }
+
+        // --- Показать доступное время ---
+        window.showTimeSlots = function(dateString, element) { // dateString это YYYY-MM-DD
+             if (!element || element.classList.contains('past-day')) return;
+
+             window.selectedDateForSlot = dateString; // Сохраняем YYYY-MM-DD
+
+             // --- Создание displayDate (Правильный метод) ---
+             const parts = dateString.split('-');
+             const year = parseInt(parts[0], 10);
+             const monthIndex = parseInt(parts[1], 10) - 1;
+             const day = parseInt(parts[2], 10);
+             const displayDate = new Date(year, monthIndex, day); // Для отображения
+             // ------------------------------------------
+
+            // Сброс выделения дня
+            document.querySelectorAll('.calendar-day.selected-day').forEach(d =>
+                d.classList.remove('selected-day'));
+            if (element) {
+                element.classList.add('selected-day');
+            }
+
+            // --- Фильтрация (Исправленная - сравнение строк) ---
+            console.log('Filtering slots for clicked date:', dateString);
+            const filteredSlots = slotsData.filter(s => {
+                 try {
+                    const slotStartTime = new Date(s.fields.start_time); // Дата слота
+
+                    // Получаем YYYY-MM-DD слота В ЛОКАЛЬНОМ времени браузера
+                    const slotDateStringLocal = slotStartTime.getFullYear() + '-' +
+                                           String(slotStartTime.getMonth() + 1).padStart(2, '0') + '-' +
+                                           String(slotStartTime.getDate()).padStart(2, '0');
+
+                    // Сравниваем строки YYYY-MM-DD
+                    const isMatch = slotDateStringLocal === dateString && !s.fields.is_booked;
+                    return isMatch;
+                 } catch(e) {
+                     console.error(`Error parsing slot date in showTimeSlots for slot PK ${s.pk}:`, e);
+                     return false;
+                 }
+            }).sort((a, b) => new Date(a.fields.start_time) - new Date(b.fields.start_time));
+            console.log('Filtered slots count:', filteredSlots.length);
+            // --- КОНЕЦ ФИЛЬТРАЦИИ ---
+
+            // Генерация HTML для слотов
+            let slotsHTML = '';
+            if (filteredSlots.length > 0) {
+                const timeGroups = {};
+                 filteredSlots.forEach(s => {
+                    const time = new Date(s.fields.start_time);
+                    const hour = time.getHours();
+                    if (!timeGroups[hour]) timeGroups[hour] = [];
+                    timeGroups[hour].push(s);
+                });
+                slotsHTML = Object.entries(timeGroups).map(([hour, slotsInHour]) => `
+                    <div class="time-group mb-2">
+                        <div class="time-header">${String(hour).padStart(2, '0')}:00</div>
+                        <div class="time-slots-grid">
+                            ${slotsInHour.map(s => `<button class="time-slot-btn" data-slot-id="${s.pk}" onclick="selectSlot('${s.pk}', this)">
+                                ${new Date(s.fields.start_time).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                            </button>`).join('')}
+                        </div>
+                    </div>
+                `).join('');
+                 if (chooseTimeLabelEl) chooseTimeLabelEl.classList.remove('d-none');
+            } else {
+                slotsHTML = '<p class="text-muted text-center my-3">На этот день нет доступного времени.</p>';
+                 if (chooseTimeLabelEl) chooseTimeLabelEl.classList.add('d-none');
+            }
+
+            // Отображение информации и блока
+            if (selectedDateHeaderEl) {
+                selectedDateHeaderEl.textContent = displayDate.toLocaleDateString('ru-RU', {
+                    day: 'numeric', month: 'long', year: 'numeric', weekday: 'long'
+                });
+            }
+            if (slotListEl) {
+                slotListEl.innerHTML = slotsHTML;
+            }
+            if (timeSlotsEl) {
+                 timeSlotsEl.classList.remove('d-none');
+                 timeSlotsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            if (confirmBtnEl) {
+                 confirmBtnEl.classList.add('d-none');
+            }
+            if (addTimeBtnEl) {
+                addTimeBtnEl.style.display = 'block';
+            }
+            if (createSlotFormEl) {
+                createSlotFormEl.classList.add('d-none');
+            }
+             window.selectedSlotId = null;
+        }
+
+        // --- Выбор конкретного слота времени ---
+        window.selectSlot = function(slotId, buttonElement) {
+            window.selectedSlotId = slotId;
+            document.querySelectorAll('.time-slot-btn.active').forEach(btn =>
+                btn.classList.remove('active'));
+            if (buttonElement) {
+                buttonElement.classList.add('active');
+            }
+            if (confirmBtnEl) {
+                confirmBtnEl.classList.remove('d-none');
+            }
+        }
+
+        // --- Действия с выбранным слотом ---
+        window.bookSlot = function(slotId) {
+             if (!slotId) return;
+            window.location.href = `/appointments/create/${slotId}/`;
+        }
+
+        window.deleteSlot = async function(slotId) {
+            if (!slotId) return;
+            if (confirm("Вы уверены, что хотите удалить этот слот?")) {
+                try {
+                    const response = await fetch(`/appointments/delete_slot/${slotId}/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrfToken, 'Accept': 'application/json' }
+                    });
+                    if (response.ok) {
+                        await loadSlots(currentDate.getFullYear(), currentDate.getMonth() + 1);
+                        const selectedDayElem = document.querySelector('.calendar-day.selected-day');
+                        if (selectedDayElem) {
+                             showTimeSlots(selectedDayElem.dataset.date, selectedDayElem);
+                        } else {
+                             if (timeSlotsEl) timeSlotsEl.classList.add('d-none');
+                        }
+                        // Используем глобальную функцию для сообщения
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("Слот успешно удален.", "success");
+                        } else {
+                            alert("Слот успешно удален."); // Fallback
+                        }
+                    } else {
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("Ошибка при удалении слота.", "danger");
+                        } else {
+                            alert("Ошибка при удалении слота."); // Fallback
+                        }
+                    }
+                } catch (error) {
+                    console.error("Ошибка:", error);
+                     if (typeof showTemporaryMessage === 'function') {
+                        showTemporaryMessage("Произошла ошибка при отправке запроса.", "danger");
+                     } else {
+                        alert("Произошла ошибка при отправке запроса."); // Fallback
+                     }
+                }
+            }
+        }
+
+        // --- Действия юриста: форма создания слота ---
+        window.openCreateSlotModal = function(dateString) {
+             if (!isLawyer || !dateString || !createSlotFormEl) return;
+             selectedDateForSlot = dateString;
+
+             // Используем безопасное создание даты для отображения
+             const parts = dateString.split('-');
+             const year = parseInt(parts[0], 10);
+             const monthIndex = parseInt(parts[1], 10) - 1;
+             const day = parseInt(parts[2], 10);
+             const displayDate = new Date(year, monthIndex, day);
+
+             const formattedDate = displayDate.toLocaleDateString('ru-RU', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+             });
+
+             if (selectedDateDisplayEl) selectedDateDisplayEl.textContent = formattedDate;
+             if (slotStartTimeSelectEl) slotStartTimeSelectEl.value = '';
+
+             createSlotFormEl.classList.remove('d-none');
+             if (addTimeBtnEl) addTimeBtnEl.style.display = 'none';
+             createSlotFormEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        window.hideCreateSlotForm = function() {
+            if (createSlotFormEl) createSlotFormEl.classList.add('d-none');
+            if (addTimeBtnEl) addTimeBtnEl.style.display = 'block';
+        }
+
+        window.createSlot = async function() {
+            if (!isLawyer || !selectedDateForSlot || !slotStartTimeSelectEl) return;
+            const startTime = slotStartTimeSelectEl.value;
+
+            if (!startTime) {
+                alert('Пожалуйста, выберите время.');
+                return;
+            }
+
+            const createButton = document.querySelector('#createSlotForm button[onclick="createSlot()"]');
+            const originalButtonText = createButton ? createButton.innerHTML : '';
+            if(createButton) {
+                createButton.disabled = true;
+                createButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Создание...';
+            }
+
+            try {
+                const response = await fetch('/appointments/create_slot_from_day/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    // Отправляем оригинальную выбранную дату
+                    body: JSON.stringify({ date: selectedDateForSlot, startTime: startTime })
+                });
+
+                // Пытаемся получить JSON в любом случае
+                let data = {};
+                try {
+                     data = await response.json();
+                } catch (jsonError) {
+                     console.error("Could not parse response JSON:", jsonError);
+                     // Если JSON нет, но статус ОК, считаем успехом
+                     if (!response.ok) {
+                        // Если был не ОК и нет JSON, генерируем общую ошибку
+                         throw new Error(response.statusText || "Server error without details");
+                     }
+                     // Если ОК, но нет JSON (например, пустой ответ 200)
+                     data = { message: 'Слот успешно создан!' }; // Сообщение по умолчанию
+                }
+
+
+                if (response.ok) {
+                    hideCreateSlotForm();
+                    await loadSlots(currentDate.getFullYear(), currentDate.getMonth() + 1);
+
+                    const selectedDayElem = document.querySelector(`.calendar-day[data-date="${selectedDateForSlot}"]`);
+                    if (selectedDayElem) {
+                        showTimeSlots(selectedDateForSlot, selectedDayElem);
+                        selectedDayElem.classList.add('selected-day');
+                    }
+
+                    // Используем глобальную функцию для сообщения
+                    if (typeof showTemporaryMessage === 'function') {
+                        showTemporaryMessage(data.message || 'Слот успешно создан!', "success");
+                    } else {
+                        alert(data.message || 'Слот успешно создан!'); // Fallback
+                    }
+
+                } else {
+                    // Используем глобальную функцию для сообщения
+                     if (typeof showTemporaryMessage === 'function') {
+                        showTemporaryMessage(data.error || `Ошибка ${response.status}: ${response.statusText}`, "danger");
+                     } else {
+                        alert(data.error || `Ошибка ${response.status}: ${response.statusText}`); // Fallback
+                     }
+                }
+            } catch (error) {
+                console.error('Ошибка при создании слота:', error);
+                if (typeof showTemporaryMessage === 'function') {
+                    showTemporaryMessage('Произошла сетевая ошибка или ошибка при выполнении запроса.', "danger");
+                } else {
+                    alert('Произошла сетевая ошибка или ошибка при выполнении запроса.'); // Fallback
+                }
+            } finally {
+                if(createButton) {
+                    createButton.disabled = false;
+                    createButton.innerHTML = originalButtonText;
+                }
+            }
+        }
+
+         // --- Действия юриста: Удаление всех слотов ---
+         if (deleteAllSlotsBtnEl && confirmDeleteModalEl && confirmDeleteBtnEl && deleteCountdownEl) {
+             let deleteTimer = null;
+             const deleteModalInstance = new bootstrap.Modal(confirmDeleteModalEl);
+
+             deleteAllSlotsBtnEl.addEventListener('click', function() {
+                 let countdown = 5;
+                 confirmDeleteBtnEl.disabled = true;
+                 deleteCountdownEl.textContent = `Подтверждение будет доступно через ${countdown} секунд...`;
+                 deleteModalInstance.show();
+
+                 if (deleteTimer) clearInterval(deleteTimer);
+
+                 deleteTimer = setInterval(() => {
+                     countdown--;
+                     if (countdown > 0) {
+                         deleteCountdownEl.textContent = `Подтверждение будет доступно через ${countdown} секунд...`;
+                     } else {
+                         clearInterval(deleteTimer);
+                         deleteTimer = null;
+                         confirmDeleteBtnEl.disabled = false;
+                         deleteCountdownEl.textContent = 'Теперь вы можете подтвердить удаление.';
+                     }
+                 }, 1000);
+             });
+
+             confirmDeleteModalEl.addEventListener('hidden.bs.modal', () => {
+                 if (deleteTimer) {
+                     clearInterval(deleteTimer);
+                     deleteTimer = null;
+                 }
+             });
+
+             confirmDeleteBtnEl.addEventListener('click', async function() {
+                 confirmDeleteBtnEl.disabled = true;
+                 try {
+                     const response = await fetch('/appointments/clear-all-slots/', {
+                         method: 'POST',
+                         headers: { 'X-CSRFToken': csrfToken },
+                     });
+                     if (response.ok) {
+                         deleteModalInstance.hide();
+                         await loadSlots(currentDate.getFullYear(), currentDate.getMonth() + 1);
+                          if (timeSlotsEl) timeSlotsEl.classList.add('d-none');
+                          // Используем глобальную функцию для сообщения
+                          if (typeof showTemporaryMessage === 'function') {
+                             showTemporaryMessage("Все слоты успешно удалены.", "success");
+                          } else {
+                             alert("Все слоты успешно удалены."); // Fallback
+                          }
+                     } else {
+                          // Используем глобальную функцию для сообщения
+                          if (typeof showTemporaryMessage === 'function') {
+                             showTemporaryMessage('Произошла ошибка при удалении слотов.', "danger");
+                          } else {
+                             alert('Произошла ошибка при удалении слотов.'); // Fallback
+                          }
+                     }
+                 } catch (error) {
+                     console.error('Error:', error);
+                      // Используем глобальную функцию для сообщения
+                      if (typeof showTemporaryMessage === 'function') {
+                         showTemporaryMessage('Произошла ошибка при отправке запроса.', "danger");
+                      } else {
+                         alert('Произошла ошибка при отправке запроса.'); // Fallback
+                      }
+                 } finally {
+                    // Разблокируем кнопку, если модалка еще видна (маловероятно)
+                    if (confirmDeleteModalEl.classList.contains('show')) {
+                         confirmDeleteBtnEl.disabled = false;
+                    }
+                 }
+             });
+         }
+
+
+        // --- Первоначальная инициализация ---
+        // Загружаем слоты для текущего месяца (передаем месяц 1-12)
+        loadSlots(currentDate.getFullYear(), currentDate.getMonth() + 1);
+
+    });
+    </script>
+{% endblock %}
+</file>
+
+<file path="templates/appointments/confirm_cancel.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2>Подтверждение отмены записи</h2>
+    <p>Вы уверены, что хотите отменить запись к юристу {{ appointment.lawyer.full_name }} на <strong>{{ appointment.date|date:"d.m.Y H:i" }}</strong>?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Да, отменить</button>
+        <a href="{% url 'accounts:client_profile' %}" class="btn btn-secondary">Нет, вернуться</a>
+    </form>
+</div>
+{% endblock %}
+</file>
+
+<file path="templates/appointments/create_appointment.html">
+{% extends 'base.html' %}
+{% block content %}
+<h2>Создать заявку</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Отправить</button>
+</form>
+<style>
+@media (max-width: 576px) {
+    form {
+        font-size: 0.97rem;
+    }
+    .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/appointments/generate_slots_days.html">
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-body">
+            <h2 class="card-title mb-4 text-center">Генерация слотов по дням</h2> {# Центрирование заголовка #}
+
+            <div class="mb-3">
+                {# Используем Font Awesome или Bootstrap Icons, если подключены #}
+                <a href="{% url 'appointments:calendar' %}" class="btn btn-secondary btn-sm"> {# Уменьшил кнопку #}
+                    <i class="bi bi-arrow-left me-1"></i> Вернуться к календарю {# Пример иконки Bootstrap #}
+                </a>
+            </div>
+
+            {% if success %}
+                {# Используем showTemporaryMessage, если она глобальна #}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("Успешно создано слотов: {{ slots_created }}", "success");
+                        } else {
+                            // Показываем стандартный alert, если функции нет
+                            const successAlert = document.createElement('div');
+                            successAlert.className = 'alert alert-success alert-dismissible fade show';
+                            successAlert.role = 'alert';
+                            successAlert.innerHTML = `Успешно создано слотов: {{ slots_created }} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                            document.querySelector('.card-body').insertBefore(successAlert, document.querySelector('.row'));
+                        }
+                    });
+                </script>
+                {# Можно удалить этот div, если используется showTemporaryMessage #}
+
+
+
+            {% endif %}
+            {% if error %}
+                 {# Используем showTemporaryMessage, если она глобальна #}
+                 <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("{{ error|escapejs }}", "danger");
+                        } else {
+                            // Показываем стандартный alert, если функции нет
+                            const errorAlert = document.createElement('div');
+                            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+                            errorAlert.role = 'alert';
+                            errorAlert.innerHTML = `{{ error|escapejs }} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                            document.querySelector('.card-body').insertBefore(errorAlert, document.querySelector('.row'));
+                        }
+                    });
+                </script>
+                 {# Можно удалить этот div, если используется showTemporaryMessage #}
+
+
+
+            {% endif %}
+
+            <div class="row g-lg-4 g-md-3 g-2"> {# Адаптивные отступы между колонками #}
+                {# Колонка Календаря #}
+                <div class="col-lg-7 col-md-6 order-md-1 order-2"> {# Уменьшил колонку календаря, порядок на мобильных #}
+                    <div class="calendar-container bg-white p-3 rounded shadow-sm mb-3 mb-md-0"> {# Убрал mb-3 на больших экранах #}
+                        <div id="calendar-days"></div>
+                    </div>
+                </div>
+                {# Колонка Формы #}
+                 <div class="col-lg-5 col-md-6 order-md-2 order-1"> {# Увеличил колонку формы, порядок на мобильных #}
+                    <form id="generateSlotsForm" method="post" class="bg-white p-3 rounded shadow-sm">
+                        {% csrf_token %}
+                        <input type="hidden" name="selected_dates" id="selectedDatesInput">
+
+                        <div class="form-group mb-3"> {# Уменьшил отступ #}
+                            <label class="form-label fw-bold">Выбранные дни:</label>
+                             <div id="selectedDatesDisplay" class="selected-dates p-2 rounded bg-light border"> {# Добавил border #}
+                                <em class="text-muted small">Нет выбранных дней</em> {# Уменьшил текст #}
+                            </div>
+                        </div>
+
+                        <div class="time-picker mb-3"> {# Уменьшил отступ #}
+                            <label class="form-label fw-bold mb-1">Время работы:</label> {# Уменьшил отступ #}
+                            <div class="d-flex gap-2 align-items-center"> {# Уменьшил gap #}
+                                <div class="flex-grow-1">
+                                    <label for="start_time_select" class="small text-muted">Начало</label>
+                                    <select id="start_time_select" name="start_time" class="form-select form-select-sm" required> {# Уменьшил select #}
+                                        <option value="" selected disabled>--:--</option> {# Улучшил placeholder #}
+                                        <option value="09:00">09:00</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                         <option value="17:30">17:30</option>
+                                    </select>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <label for="end_time_select" class="small text-muted">Конец</label>
+                                    <select id="end_time_select" name="end_time" class="form-select form-select-sm" required> {# Уменьшил select #}
+                                        <option value="" selected disabled>--:--</option>
+                                        <option value="09:30">09:30</option>
+                                        <option value="10:00">10:00</option>
+                                        <option value="10:30">10:30</option>
+                                        <option value="11:00">11:00</option>
+                                        <option value="11:30">11:30</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="12:30">12:30</option>
+                                        <option value="13:00">13:00</option>
+                                        <option value="13:30">13:30</option>
+                                        <option value="14:00">14:00</option>
+                                        <option value="14:30">14:30</option>
+                                        <option value="15:00">15:00</option>
+                                        <option value="15:30">15:30</option>
+                                        <option value="16:00">16:00</option>
+                                        <option value="16:30">16:30</option>
+                                        <option value="17:00">17:00</option>
+                                        <option value="17:30">17:30</option>
+                                        <option value="18:00">18:00</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mt-2"> {# Добавил mt-2 #}
+                            <i class="bi bi-calendar-plus me-1"></i> Сгенерировать слоты
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Стили для мини-календаря выбора дней */
+.calendar-container {
+    background: #fff;
+    border-radius: 8px; /* Уменьшил радиус */
+    padding: 15px; /* Уменьшил padding */
+    border: 1px solid #eee; /* Добавил границу */
+}
+.calendar-day-selectable {
+    padding: 10px 5px; /* Уменьшил padding */
+    margin: 1px; /* Уменьшил margin */
+    border-radius: 6px; /* Уменьшил радиус */
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out; /* Ускорил анимацию */
+    font-size: 0.85rem; /* Уменьшил шрифт */
+}
+.calendar-day-selectable:hover:not(.disabled) {
+    background: #f8f9fa;
+    transform: scale(1.03); /* Уменьшил scale */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.calendar-day-selectable.selected {
+    background: var(--bs-primary); /* Используем primary цвет */
+    color: white;
+    border-color: var(--bs-primary-dark);
+    font-weight: 500;
+}
+.calendar-day-selectable.disabled {
+    background: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.6; /* Сделал чуть виднее */
+}
+.calendar-header {
+    margin-bottom: 0.8rem; /* Уменьшил отступ */
+}
+.calendar-header h5 {
+    text-transform: capitalize;
+    font-size: 1.1rem; /* Уменьшил заголовок */
+    font-weight: 500;
+}
+.calendar-header .btn {
+    padding: 0.2rem 0.5rem; /* Уменьшил кнопки навигации */
+}
+/* Дни недели */
+.calendar-days-header .col {
+    padding: 0.2rem;
+}
+
+/* Сетка */
+#calendar-days .row.g-0 {
+    margin-left: -1px; /* Компенсация margin у ячеек */
+    margin-right: -1px;
+}
+#calendar-days .row.g-0 > .col {
+    padding-left: 1px; /* Уменьшил padding */
+    padding-right: 1px;
+}
+
+/* Форма */
+.selected-dates {
+    min-height: 50px; /* Уменьшил высоту */
+    max-height: 100px; /* Добавил макс высоту */
+    overflow-y: auto; /* Добавил скролл */
+}
+.selected-dates .badge {
+    font-size: 0.8rem; /* Уменьшил баджи */
+    padding: 0.3em 0.5em;
+}
+.time-picker label.small {
+     margin-bottom: 0.1rem; /* Уменьшил отступ */
+}
+.time-picker .form-select-sm { /* Стили для маленьких селектов */
+    font-size: 0.9rem;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+}
+.form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25); /* Стандартный фокус BS */
+}
+
+/* Адаптивность */
+@media (max-width: 767.98px) { /* md breakpoint */
+    .calendar-container {
+        margin-bottom: 1.5rem; /* Добавляем отступ под календарем на мобильных */
+    }
+    .row > [class*="col-md-"] { /* Убираем специфичные отступы колонок md на мобильных */
+        padding-left: var(--bs-gutter-x, 0.75rem);
+        padding-right: var(--bs-gutter-x, 0.75rem);
+    }
+     #generateSlotsForm {
+         padding: 1rem; /* Уменьшаем padding формы */
+     }
+     .calendar-day-selectable {
+        padding: 8px 4px;
+        font-size: 0.8rem;
+     }
+      .selected-dates {
+          min-height: 40px;
+          max-height: 80px;
+      }
+       .time-picker .form-select-sm {
+          font-size: 0.85rem;
+       }
+}
+
+@media (max-width: 575.98px) { /* sm breakpoint */
+    .card-body {
+        padding: 1rem; /* Уменьшаем общий padding карточки */
+    }
+    .calendar-container {
+        padding: 10px;
+    }
+     .calendar-day-selectable {
+        padding: 6px 3px;
+        font-size: 0.75rem;
+        border-radius: 4px;
+     }
+     .calendar-header h5 {
+        font-size: 1rem;
+     }
+      .selected-dates .badge {
+         font-size: 0.75rem;
+     }
+      .time-picker .d-flex {
+          flex-direction: column; /* Ставим селекты друг под другом */
+          gap: 0.5rem !important; /* Уменьшаем вертикальный отступ */
+          align-items: stretch !important; /* Растягиваем по ширине */
+      }
+       #generateSlotsForm .btn {
+          font-size: 0.9rem;
+          padding: 0.5rem 1rem;
+       }
+}
+
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+    let selectedDays = new Set();
+
+    // --- Обновление отображения выбранных дат ---
+    function updateSelectedDatesDisplay() {
+        const display = document.getElementById('selectedDatesDisplay');
+        if (!display) return;
+
+        if (selectedDays.size === 0) {
+            display.innerHTML = '<em class="text-muted small">Нет выбранных дней</em>';
+        } else {
+            // Преобразуем Set в массив, сортируем даты
+            const datesArray = Array.from(selectedDays);
+            datesArray.sort((a, b) => new Date(a) - new Date(b)); // Сортировка дат
+
+            display.innerHTML = datesArray.map(dateStr => {
+                const date = new Date(dateStr + 'T00:00:00'); // Используем T00:00:00 для избежания сдвига из-за TZ
+                return `<span class="badge bg-primary me-1 mb-1">${date.toLocaleDateString('ru-RU', { day: '2-digit', month: 'short' })}</span>`; // Формат ДД мес
+            }).join('');
+        }
+        // Обновляем скрытое поле
+        const input = document.getElementById('selectedDatesInput');
+        if(input) input.value = Array.from(selectedDays).join(',');
+    }
+
+    // --- Рендеринг календаря ---
+    function renderCalendar(month, year) {
+        const calendarDaysEl = document.getElementById('calendar-days');
+        if (!calendarDaysEl) return;
+
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const todayDate = new Date(); // Сегодняшняя дата без обнуления времени
+        const todayDateZero = new Date(todayDate.setHours(0,0,0,0)); // Сегодня 00:00
+
+        let html = `<div class="calendar-header d-flex justify-content-between align-items-center mb-2">`; // Уменьшил mb
+        html += `<button type="button" class="btn btn-outline-secondary btn-sm" id="prevMonthBtn">«</button>`; // Изменил символ
+        html += `<h5 class="mb-0 mx-2">${firstDay.toLocaleString('ru-RU', {month: 'long', year: 'numeric'})}</h5>`;
+        html += `<button type="button" class="btn btn-outline-secondary btn-sm" id="nextMonthBtn">»</button>`; // Изменил символ
+        html += `</div>`;
+
+        html += '<div class="row g-0 text-center mb-1 calendar-days-header">'; // Уменьшил mb
+        ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => {
+            html += `<div class="col"><small class="text-muted fw-bold">${d}</small></div>`; // Добавил fw-bold
+        });
+        html += '</div>';
+
+        html += '<div class="row g-0">'; // Отступы между днями регулируются через margin в .calendar-day-selectable
+
+        let dayOfWeek = (firstDay.getDay() + 6) % 7;
+        for (let i = 0; i < dayOfWeek; i++) {
+            html += '<div class="col"><div class="p-1"></div></div>'; // Уменьшил p-2
+        }
+
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const date = new Date(year, month, day);
+            date.setHours(0,0,0,0); // Обнуляем время для сравнения
+            const isSelected = selectedDays.has(dateStr);
+            const isPast = date.getTime() < todayDateZero.getTime(); // Сравниваем с обнуленным сегодня
+
+            if ((dayOfWeek + day - 1) % 7 === 0 && day !== 1) {
+                html += '</div><div class="row g-0">';
+            }
+
+            html += `<div class="col">
+                <div class="calendar-day-selectable ${isSelected ? 'selected' : ''} ${isPast ? 'disabled' : ''}"
+                    data-date="${dateStr}" ${isPast ? 'aria-disabled="true"' : ''}>
+                    ${day}
+                </div>
+            </div>`;
+        }
+
+        const remainingCells = 7 - ((dayOfWeek + lastDay.getDate()) % 7);
+        if (remainingCells < 7) {
+            for (let i = 0; i < remainingCells; i++) {
+                html += '<div class="col"><div class="p-1"></div></div>';
+            }
+        }
+
+        html += '</div>';
+        calendarDaysEl.innerHTML = html;
+
+        // --- Обработчики событий календаря ---
+        const prevBtn = document.getElementById('prevMonthBtn');
+        const nextBtn = document.getElementById('nextMonthBtn');
+
+        if (prevBtn) {
+            prevBtn.onclick = () => {
+                if (currentMonth === 0) { currentMonth = 11; currentYear--; }
+                else { currentMonth--; }
+                renderCalendar(currentMonth, currentYear);
+            };
+            // Не даем переходить к прошлым месяцам
+            const prevMonthDate = new Date(year, month - 1, 1);
+             if (prevMonthDate.getFullYear() < todayDate.getFullYear() ||
+                (prevMonthDate.getFullYear() === todayDate.getFullYear() && prevMonthDate.getMonth() < todayDate.getMonth())) {
+                prevBtn.disabled = true;
+            }
+        }
+
+        if (nextBtn) {
+            nextBtn.onclick = () => {
+                if (currentMonth === 11) { currentMonth = 0; currentYear++; }
+                else { currentMonth++; }
+                renderCalendar(currentMonth, currentYear);
+            };
+        }
+
+        calendarDaysEl.querySelectorAll('.calendar-day-selectable:not(.disabled)').forEach(el => {
+            el.onclick = function() {
+                const date = this.dataset.date;
+                if (selectedDays.has(date)) {
+                    selectedDays.delete(date);
+                    this.classList.remove('selected');
+                } else {
+                    selectedDays.add(date);
+                    this.classList.add('selected');
+                }
+                updateSelectedDatesDisplay(); // Обновляем отображение и скрытое поле
+            };
+        });
+    }
+
+    // --- Обработчик отправки формы ---
+    const form = document.getElementById('generateSlotsForm');
+    if (form) {
+        form.onsubmit = function(e) {
+            const input = document.getElementById('selectedDatesInput');
+             if (selectedDays.size === 0) {
+                e.preventDefault();
+                 // Используем showTemporaryMessage, если доступно
+                 if (typeof showTemporaryMessage === 'function') {
+                     showTemporaryMessage('Пожалуйста, выберите хотя бы один день', 'warning');
+                 } else {
+                     alert('Пожалуйста, выберите хотя бы один день');
+                 }
+                return false;
+            }
+            // Значение уже обновляется в updateSelectedDatesDisplay
+            // input.value = Array.from(selectedDays).join(',');
+        };
+    }
+
+    // Инициализация
+    renderCalendar(currentMonth, currentYear);
+    updateSelectedDatesDisplay(); // Обновить при загрузке (если вдруг даты сохранены)
+
+});
+</script>
+{% endblock %}
+</file>
+
+<file path="templates/appointments/lawyer_dashboard.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Панель управления записями</h2>
+
+
+
+    {% if status == 'rejected' and appointments %}
+    <div class="mb-4">
+        <form method="post" action="{% url 'appointments:clear_rejected' %}" class="d-inline"
+              onsubmit="return confirm('Вы уверены, что хотите удалить все отклонённые записи?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Очистить все отклонённые записи
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if status == 'pending' %}active{% endif %}" href="?status=pending">
+                <i class="bi bi-clock"></i> Ожидающие
+                <span class="status-count pending">{{ pending_count }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status == 'approved' %}active{% endif %}" href="?status=approved">
+                <i class="bi bi-check-circle"></i> Подтвержденные
+                <span class="status-count approved">{{ approved_count }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if status == 'rejected' %}active{% endif %}" href="?status=rejected">
+                <i class="bi bi-x-circle"></i> Отклоненные
+                <span class="status-count rejected">{{ rejected_count }}</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="row">
+        {% for appointment in appointments %}
+        <div class="col-md-6 mb-4">
+            <div class="card {% if appointment.status == 'Pending' %}border-warning{% elif appointment.status == 'Approved' %}border-success{% else %}border-danger{% endif %}">
+                <div class="card-header">
+                    <strong>Запись #{{ appointment.id }}</strong>
+                    <span class="float-end">
+                        {{ appointment.date|date:"d.m.Y" }} в {{ appointment.date|date:"H:i" }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Клиент: {{ appointment.client.full_name }}</h5>
+                    <p class="card-text">
+                        <strong>Телефон:</strong> {{ appointment.client.phone|default:"Не указан" }}<br>
+                        <strong>ФИО:</strong> {{ appointment.client.full_name|default:"Не указано" }}<br>
+                        <strong>Статус:</strong>
+                        <span class="badge {% if appointment.status == 'Pending' %}bg-warning{% elif appointment.status == 'Approved' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ appointment.get_status_display }}
+                        </span>
+                    </p>
+
+                    {% if appointment.status == 'Pending' %}
+                    <div class="btn-group">
+                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Approved">
+                            <button type="submit" class="btn btn-success me-2">Подтвердить</button>
+                        </form>
+                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Rejected">
+                            <button type="submit" class="btn btn-danger">Отклонить</button>
+                        </form>
+                    </div>
+                    {% elif appointment.status == 'Approved' %}
+                    <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="Rejected">
+                        <button type="submit" class="btn btn-warning">Отменить запись</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-md-6 mx-2">
+            <div class="alert alert-info d-flex align-items-center">
+            <i class="bi bi-info-circle me-2"></i>
+            <div class="text-center w-100">
+                Нет записей в этой категории
+            </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<style>
+/* Мобильная адаптивность для карточек и табов */
+@media (max-width: 576px) {
+    .nav-tabs .nav-link {
+        font-size: 0.95rem;
+        padding: 8px 6px;
+    }
+    .card .card-header, .card .card-body {
+        font-size: 0.97rem;
+        padding: 0.7rem 0.8rem;
+    }
+    .btn, .btn-group .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+    .mb-4 {
+        margin-bottom: 1rem !important;
+    }
+}
+
+/* Стили для табов и бейджей */
+.nav-tabs .nav-link {
+    position: relative;
+    padding: 0.8rem 1.2rem;
+    color: #6c757d;
+    transition: all 0.2s ease;
+    border: none;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #495057;
+    border-color: transparent;
+    background-color: rgba(0,0,0,0.03);
+}
+
+.nav-tabs .nav-link.active {
+    color: #0d6efd;
+    border-color: #0d6efd;
+    background-color: rgba(13,110,253,0.05);
+}
+
+.status-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border-radius: 10px;
+}
+
+.status-count.pending {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.status-count.approved {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #155724;
+}
+
+.status-count.rejected {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #721c24;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 576px) {
+    .nav-tabs .nav-link {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .status-count {
+        min-width: 18px;
+        height: 18px;
+        font-size: 0.8rem;
+        margin-left: 4px;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/appointments/select_slot.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Выберите удобное время</h2>
+
+    <div class="mt-4">
+        <a href="{% url 'appointments:calendar' %}" class="btn btn-secondary mb-3">Вернуться к календарю</a>
+    </div>
+
+    <div class="row">
+        {% for slot in slots %}
+        <div class="col-md-4 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ slot.start_time|date:"d M H:i" }}</h5>
+                    <form method="post" action="{% url 'create_appointment' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="slot_id" value="{{ slot.id }}">
+                        <button type="submit" class="btn btn-primary w-100">
+                            Выбрать это время
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Нет доступных слотов для записи. Пожалуйста, проверьте позже.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<style>
+@media (max-width: 576px) {
+    .card .card-body, .card .card-title {
+        font-size: 0.97rem;
+        padding: 0.7rem 0.8rem;
+    }
+    .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+    .mb-3 {
+        margin-bottom: 0.7rem !important;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/registration/confirm_email.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="max-width: 420px;">
+    <h2 class="mb-4 text-center">Подтверждение email</h2>
+    <form method="post" class="p-4 rounded shadow-sm" style="background: #f8f9fa;">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="id_code" class="form-label">Код из email</label>
+            <input type="text" name="code" id="id_code" class="form-control" maxlength="6" required placeholder="Введите код">
+        </div>
+        <button type="submit" class="btn btn-success w-100">Подтвердить</button>
+    </form>
+    <div class="mt-3 text-center">
+        <a href="{% url 'accounts:login' %}">Войти</a>
+    </div>
+</div>
+{% endblock %}
+</file>
+
+<file path="templates/registration/login.html">
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-5">
+                <div class="card-header">
+                    <h2>Вход в систему</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        {{ error }}<br>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}<br>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="mb-3">
+                            {{ form.username.label_tag }}
+                            <input type="email"
+                                   name="{{ form.username.name }}"
+                                   class="form-control login-field"
+                                   id="id_username"
+                                   placeholder="Email"
+                                   required
+                                   value="{{ form.username.value|default:'' }}">
+                        </div>
+                        <div class="mb-3">
+                            {{ form.password.label_tag }}
+                            <input type="password"
+                                   name="{{ form.password.name }}"
+                                   class="form-control login-field"
+                                   id="id_password"
+                                   placeholder="Пароль"
+                                   required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Войти</button>
+                    </form>
+                    <hr>
+                    <div class="text-center auth-links">
+                        <p><a href="{% url 'accounts:register' %}" class="auth-link">Нет аккаунта? Зарегистрироваться</a></p>
+                        <p><a href="{% url 'accounts:password_reset' %}" class="auth-link">Забыли пароль?</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.login-field {
+    background: #fff !important;
+    border: 2px solid #475569 !important;
+    font-weight: 500;
+    box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.1);
+}
+
+.login-field:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+@media (max-width: 576px) {
+    .form-control, .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+    h2 {
+        font-size: 1.3rem;
+    }
+}
+.auth-links {
+    margin-top: 1.5rem;
+}
+
+.auth-link {
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+}
+
+.auth-link:hover {
+    color: #2563eb;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/registration/password_reset_confirm.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="max-width: 420px;">
+    <h2 class="mb-4 text-center">Сброс пароля</h2>
+    <form method="post" class="p-4 rounded shadow-sm" style="background: #f8f9fa;">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            {{ form.code.label_tag }}
+            <input type="text"
+                   name="{{ form.code.name }}"
+                   class="form-control password-reset-field"
+                   id="id_code"
+                   placeholder="Введите код из email"
+                   maxlength="6"
+                   required
+                   value="{{ form.code.value|default:'' }}">
+        </div>
+        <div class="mb-3">
+            {{ form.new_password1.label_tag }}
+            <input type="password"
+                   name="{{ form.new_password1.name }}"
+                   class="form-control password-reset-field"
+                   id="id_new_password1"
+                   placeholder="Новый пароль"
+                   required>
+        </div>
+        <div class="mb-3">
+            {{ form.new_password2.label_tag }}
+            <input type="password"
+                   name="{{ form.new_password2.name }}"
+                   class="form-control password-reset-field"
+                   id="id_new_password2"
+                   placeholder="Повторите новый пароль"
+                   required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Сменить пароль</button>
+    </form>
+    <div class="mt-4 text-center">
+        <a href="{% url 'accounts:login' %}" class="text-decoration-none btn btn-outline-secondary btn-sm">
+            <i class="fas fa-sign-in-alt me-1"></i>Войти в систему
+        </a>
+    </div>
+    </div>
+</div>
+<style>
+.password-reset-field {
+    background: #fffbe6 !important;
+    border: 2px solid rgb(5, 5, 4) !important;
+    font-weight: 500;
+    box-shadow: 0 0 0 2px #ffe58f33;
+}
+@media (max-width: 576px) {
+    .form-control, .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+    h2 {
+        font-size: 1.2rem;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/registration/password_reset_request.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="max-width: 420px;">
+    <h2 class="mb-4 text-center">Восстановление пароля</h2>
+    <form method="post" class="p-4 rounded shadow-sm" style="background: #f8f9fa;">
+        {% csrf_token %}
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        {{ error }}<br>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if code_sent %}
+            <div class="alert alert-success">
+                Код отправлен на ваш email.
+            </div>
+        {% endif %}
+        <div class="mb-3">
+            {{ form.email.label_tag }}
+            <input type="email"
+                   name="{{ form.email.name }}"
+                   class="form-control password-reset-field"
+                   id="id_email"
+                   placeholder="example@mail.ru"
+                   required
+                   value="{{ form.email.value|default:'' }}">
+        </div>
+        <button type="submit" class="btn btn-primary w-100 mb-3">Отправить код</button>
+        {% if code_sent %}
+            <a href="{% url 'accounts:password_reset_confirm' %}" class="btn btn-success w-100">
+                Перейти к вводу кода
+            </a>
+        {% endif %}
+    </form>
+    <div class="mt-3 text-center">
+        <a href="{% url 'accounts:login' %}">Войти</a>
+    </div>
+</div>
+<style>
+.password-reset-field {
+    background: #fff !important;
+    border: 2px solid #475569 !important;
+    font-weight: 500;
+    box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.1);
+}
+
+.password-reset-field:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+@media (max-width: 576px) {
+    .form-control, .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+    h2 {
+        font-size: 1.2rem;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/registration/register.html">
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card mt-5">
+                <div class="card-header">
+                    <h2>Регистрация</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+                    </form>
+                    <hr>
+                    <p>Уже есть аккаунт? <a href="{% url 'accounts:login' %}">Войти</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+@media (max-width: 576px) {
+    .form-control, .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+    h2 {
+        font-size: 1.3rem;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/registration/registration.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h2 class="mb-4">Регистрация клиента</h2>
+
+    <form method="post">
+      {% csrf_token %}
+
+      {% if form.errors %}
+        <div class="alert alert-danger">
+          {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+              {{ error }}<br>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+
+      <div class="mb-3">
+        <label for="id_full_name" class="form-label">ФИО</label>
+        <input
+          type="text"
+          name="full_name"
+          id="id_full_name"
+          class="form-control registration-field"
+          placeholder="Иванов Иван Иванович"
+          required
+          value="{{ form.full_name.value|default:'' }}"
+        >
+      </div>
+
+
+      <div class="mb-3">
+        <label for="id_email" class="form-label">Email</label>
+        <input
+          type="email"
+          name="email"
+          id="id_email"
+          class="form-control registration-field"
+          placeholder="example@mail.ru"
+          required
+          value="{{ form.email.value|default:'' }}"
+        >
+      </div>
+
+
+      <div class="mb-3">
+        <label for="id_phone" class="form-label">Телефон</label>
+        <input
+          type="tel"
+          name="phone"
+          id="id_phone"
+          class="form-control registration-field"
+          placeholder="+7 (999) 123-45-67"
+          required
+          value="{{ form.phone.value|default:'' }}"
+        >
+      </div>
+
+
+      <div class="mb-3">
+        <label for="id_password1" class="form-label">Пароль</label>
+        <input
+          type="password"
+          name="password1"
+          id="id_password1"
+          class="form-control registration-field"
+          placeholder="Не менее 8 символов"
+          required
+        >
+      </div>
+
+
+      <div class="mb-3">
+        <label for="id_password2" class="form-label">Повторите пароль</label>
+        <input
+          type="password"
+          name="password2"
+          id="id_password2"
+          class="form-control registration-field"
+          placeholder="Повторите пароль"
+          required
+        >
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+    </form>
+
+    <div class="mt-3 text-center">
+      <span>Уже есть аккаунт? </span>
+      <a href="{% url 'accounts:login' %}" class="text-decoration-none">Войти</a>
+    </div>
+  </div>
+</div>
+<style>
+.registration-field {
+    background: #fff !important;
+    border: 2px solid #475569 !important;
+    font-weight: 500;
+    box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.1);
+}
+
+.registration-field:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+@media (max-width: 576px) {
+    .form-control, .btn {
+        font-size: 0.97rem;
+        padding: 8px 10px;
+    }
+    .mb-3 {
+        margin-bottom: 0.7rem !important;
+    }
+    h2 {
+        font-size: 1.3rem;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path="templates/base.html">
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Запись к юристу</title>
+    {% load static %}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.0/dist/flatly/bootstrap.min.css" rel="stylesheet">
+    <link href="{% static 'styles.css' %}" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon-32x32.png' %}?v=1">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon-16x16.png' %}?v=1">
+    <link rel="shortcut icon" href="{% static 'favicon-32x32.png' %}?v=1">
+    <link rel="manifest" href="{% static 'site.webmanifest' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center fw-bold" href="{% url 'home' %}">
+                <i class="bi bi-house-door-fill me-2"></i>
+                ЮРИДИЧЕСКИЕ УСЛУГИ
+            </a>
+            <div class="d-flex align-items-center">
+                {% if user.is_authenticated %}
+                    {% if user.lawyerprofile %}
+                        <div class="position-relative me-3">
+                            {# Добавляем класс notification-link к ссылке <a> #}
+                            <a href="{% url 'appointments:lawyer_dashboard' %}" class="text-light text-decoration-none notification-link">
+                                {# Убираем span и класс bell-anim, стили теперь на <a> и <i> #}
+                                <span style="font-size: 1.5em;"> {# Оставляем span только для размера шрифта #}
+                                    <i class="bi bi-bell-fill"></i>
+                                </span>
+                                {% if pending_appointments_count > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        {{ pending_appointments_count }}
+                                        <span class="visually-hidden">новые уведомления</span>
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <a href="{% url 'appointments:lawyer_dashboard' %}" class="btn btn-light me-2">Профиль юриста</a>
+                    {% else %}
+                        <a href="{% url 'accounts:client_profile' %}" class="btn btn-light me-2">Профиль</a>
+                    {% endif %}
+                    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger d-inline-flex align-items-center">
+                            Выйти<i class="bi bi-box-arrow-right ms-2"></i>
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-light me-2">Войти</a>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-success">Регистрация</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {# --- КОНТЕЙНЕР ДЛЯ СООБЩЕНИЙ --- #}
+    {# Убедитесь, что стили для .messages-container и .message-box есть в styles.css #}
+    <div class="messages-container">
+        {% if messages %}
+            {# Скрипт для обработки сообщений Django framework #}
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    {% for message in messages %}
+                        // Вызываем showTemporaryMessage для каждого сообщения Django
+                        // Передаем текст сообщения (экранированный для JS) и теги
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("{{ message|escapejs }}", "{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}");
+                        } else {
+                             console.error("showTemporaryMessage function not found. Cannot display message: {{ message|escapejs }}");
+                             // Опционально: Fallback на стандартный alert для отладки
+                             // alert("{{ message|escapejs }}");
+                        }
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    </div>
+    {# --- КОНЕЦ КОНТЕЙНЕРА ДЛЯ СООБЩЕНИЙ --- #}
+
+    <div class="container mt-4"> {# Этот контейнер будет отодвинут вниз с помощью margin-top в styles.css #}
+        {% block content %}
+
+        {% endblock %}
+    </div>
+
+    {# Bootstrap JS должен быть перед вашим app.js #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {# Ваш общий скрипт, содержащий showTemporaryMessage #}
+    {# Убедитесь, что путь {% static 'js/app.js' %} правильный и файл существует #}
+    <script src="{% static 'js/app.js' %}"></script>
+
+    {# Блок для скриптов конкретной страницы (например, календаря или редактирования профиля) #}
+    {# Эти скрипты будут иметь доступ к showTemporaryMessage, т.к. app.js загружен раньше #}
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+</file>
+
+<file path="templates/home.html">
+{% extends 'base.html' %}
+{% block content %}
+<div class="container my-5">
+    <div class="row text-center mb-4">
+        <div class="col-12">
+            <h1 class="display-4 text-outline">Юридические услуги по банкротству</h1>
+            <h2 class="mt-3 text-primary text-outline">Осипова Оксана Васильевна</h2>
+        </div>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card border-secondary">
+                <div class="card-body ">
+                    <h3 class="card-title mb-4 text-outline text-center">Профессиональная помощь в процедуре банкротства</h3>
+                    <ul class="list-unstyled fs-5 text-center feature-list">
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Консультации физических и юридических лиц</li>
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Сопровождение на всех этапах процедуры</li>
+                        <li class="mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i>Законное списание долгов</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white text-outline text-center">
+                    <h4>Контакты</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text fs-5">
+                        <i class="bi bi-geo-alt-fill me-2"></i>
+                        г. Сегежа, ул. Ленина 19а<br>
+                        <i class="bi bi-clock-fill me-2"></i>
+                        Вт-Пт: 14:00 - 18:00<br>
+                        <i class="bi bi-telephone-fill me-2"></i>
+                        +7 (900) 123-45-67<br>
+                        <i class="bi bi-envelope-fill me-2"></i>
+                        osipova.bankrot@example.com
+                    </p>
+
+                    <div style="width:100%;height:250px;" class="my-3">
+
+                        <iframe src="https://yandex.ru/map-widget/v1/?l=sat%2Cskl%2Cmasstransit&ll=34.307999%2C63.745399&z=16&pt=34.307999,63.745399,pm2rdl" width="100%" height="250" frameborder="0" style="border-radius:8px;" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="col-md-8">
+            <div class="card h-70" style="min-height:unset;">
+                <div class="card-header bg-primary text-white text-outline text-center p-2" style="padding-top:0.5rem;padding-bottom:0.5rem;">
+                    <h4 class="mb-0">Запись на консультацию</h4>
+                </div>
+                <div class="card-body text-center py-1 d-flex flex-column align-items-center justify-content-start" style="padding-top:0.5rem;padding-bottom:0.5rem;">
+                    {% if user.is_authenticated %}
+                        <p class="fs-5 mb-1 text-outline">Добро пожаловать, {{ user.full_name }}!</p>
+
+                        <div class="consultation-btns w-100 mt-4">
+                            {% if user.lawyerprofile %}
+                                <a href="{% url 'appointments:calendar' %}" class="btn btn-primary btn-lg text-outline w-75 mx-auto">
+                                    <i class="bi bi-calendar-plus"></i> Управление расписанием
+                                </a>
+                            {% else %}
+                                <a href="{% if user.is_authenticated %}{% url 'appointments:calendar' %}{% else %}{% url 'accounts:login' %}?next={% url 'appointments:CA' %}{% endif %}" class="btn btn-primary btn-lg text-outline w-75 mx-auto">
+                                    <i class="bi bi-calendar-plus"></i> Записаться
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'accounts:client_profile' %}" class="btn btn-outline-secondary btn-lg text-outline w-75 mx-auto">
+                                <i class="bi bi-files"></i> Мои записи
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="fs-5 mb-1 text-outline">Для записи требуется авторизация</p>
+
+                        <div class="consultation-btns w-100 mt-4">
+                            <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg text-outline w-75 mx-auto">
+                                <i class="bi bi-box-arrow-in-right"></i> Войти
+                            </a>
+                            <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg text-outline w-75 mx-auto">
+                                <i class="bi bi-person-plus"></i> Регистрация
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+@media (max-width: 576px) {
+    .display-4 {
+        font-size: 1.5rem;
+    }
+    .card .card-header, .card .card-body {
+        font-size: 0.97rem;
+        padding: 0.4rem 0.6rem;
+    }
+    .btn, .btn-lg {
+        font-size: 0.97rem !important;
+        padding: 10px 12px !important;
+    }
+    h1, h2, h3, h4 {
+        font-size: 1.1rem !important;
+    }
+    .feature-list li {
+        font-size: 0.97rem !important;
+    }
+    .card-body .btn {
+        width: 100% !important;
+        min-width: unset;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    .consultation-btns {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .consultation-btns > .btn {
+        margin-bottom: 0.5rem;
+    }
+    /* Увеличиваем минимальную высоту блока с кнопками */
+    .card-body.d-flex.flex-column.align-items-center.justify-content-start {
+        min-height: 340px;
+    }
+}
+.card-body .btn {
+    width: 90%;
+    min-width: 220px;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+.card-body .gap-3, .card-body .gap-2 {
+    margin-bottom: 0 !important;
+}
+.card-body {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.card-header {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+.card-body p,
+.card-body h4 {
+    margin-bottom: 0.5rem !important;
+}
+
+@media (min-width: 577px) {
+    .card-body.text-center.py-2 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.2rem !important;
+    }
+}
+.consultation-btns > .btn {
+    margin-bottom: 0.5rem;
+}
+@media (min-width: 768px) {
+    .consultation-btns.flex-md-row > .btn {
+        margin-bottom: 0 !important;
+        margin-right: 1.5rem;
+    }
+    .consultation-btns.flex-md-row > .btn:last-child {
+        margin-right: 0 !important;
+    }
+}
+</style>
+{% endblock %}
+</file>
+
+<file path=".gitignore">
+# Database
+db.sqlite3
+*.sqlite3
+*.db
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Static & Media
+/staticfiles/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Migration cache
+*/migrations/__pycache__/
+*/*/*/migrations/__pycache__/
+</file>
+
+<file path="context_processors.py">
+def lawyer_notifications(request)
+⋮----
+count = Appointment.objects.filter(lawyer=request.user, status="Pending").count()
+</file>
+
+<file path="manage.py">
+def main()
+</file>
+
+<file path="requirements.txt">
+asgiref==3.8.1
+dj-database-url==2.3.0
+Django==5.2
+django-extensions==4.1
+gunicorn==23.0.0
+packaging==25.0
+psycopg2-binary==2.9.10
+python-dateutil==2.9.0.post0
+six==1.17.0
+sqlparse==0.5.3
+typing_extensions==4.13.2
+tzdata==2025.2
+whitenoise==6.5.0
+</file>
+
+</files>

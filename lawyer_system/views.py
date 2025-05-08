@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.core.mail import EmailMessage
 from django.conf import settings
-from .models import Appointment
+from appointments.models import Appointment
 
 def confirm_appointment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)

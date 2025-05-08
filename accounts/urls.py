@@ -16,4 +16,5 @@ urlpatterns = [
     path('client_profile/', client_profile, name='client_profile'),
     path('confirm_email/', views.confirm_email, name='confirm_email'),
     path('client_profile/', views.client_profile, name='client_profile'),
+    path('document/delete/<int:document_id>/', views.delete_general_document, name='delete_general_document'),
 ]

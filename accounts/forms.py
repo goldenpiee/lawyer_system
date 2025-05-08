@@ -55,7 +55,7 @@ class PasswordResetConfirmForm(forms.Form):
 class ClientDocumentForm(forms.ModelForm):
     class Meta:
         model = ClientDocument
-        fields = ['document', 'description']
+        fields = ['title', 'document', 'description']
         widgets = {
             'description': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Описание (необязательно)'}),
             'document': forms.FileInput(attrs={'class': 'form-control form-control-sm'})

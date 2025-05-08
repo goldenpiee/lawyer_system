@@ -2,6 +2,9 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Per
 from django.db import models
 from django.core.validators import RegexValidator
 from django.conf import settings
+from django.core.exceptions import ValidationError # Для валидации
+from django.urls import reverse 
+import os
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, full_name, phone, password=None, **extra_fields):
@@ -72,6 +75,18 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
+    def get_full_name(self):
+        return self.full_name
+
+    def get_short_name(self): 
+        return self.full_name.split(' ')[0] if self.full_name else ''
+
+    def get_absolute_url(self):
+        if hasattr(self, 'lawyerprofile') and self.lawyerprofile is not None:
+            return reverse('appointments:lawyer_dashboard')
+        else:
+            return reverse('accounts:client_profile')
+
 class LawyerProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     specialization = models.CharField(
@@ -98,15 +113,44 @@ class LawyerProfile(models.Model):
     def __str__(self):
         return f'Lawyer: {self.user.email}'
 class ClientDocument(models.Model):
-    client = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='general_documents', on_delete=models.CASCADE)
-    document = models.FileField(upload_to='client_general_documents/%Y/%m/%d/')
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='general_documents',
+        on_delete=models.CASCADE
+    )
+    # === НОВОЕ ПОЛЕ ===
+    title = models.CharField(
+        "Название документа",
+        max_length=150,
+        help_text="Придумайте короткое и понятное название для этого документа (например, 'Скан паспорта', 'Договор аренды')."
+    )
+    # ==================
+    document = models.FileField(
+        upload_to='client_general_documents/%Y/%m/%d/',
+        verbose_name="Файл документа"
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    description = models.CharField(max_length=255, blank=True, verbose_name="Описание файла")
-
-    def __str__(self):
-        return f"Общий документ клиента {self.client.email} - {self.document.name.split('/')[-1]}"
+    description = models.CharField(
+        max_length=255,
+        blank=True, # Описание остается необязательным
+        verbose_name="Краткое описание (необязательно)"
+    )
 
     class Meta:
         ordering = ['-uploaded_at']
         verbose_name = "Общий документ клиента"
         verbose_name_plural = "Общие документы клиентов"
+
+    def __str__(self):
+        # Обновляем __str__ для использования нового поля title
+        return f"{self.title} (Клиент: {self.client.email})"
+
+    def clean(self):
+        super().clean()
+        # Проверка, что title не пустой (хотя CharField по умолчанию и так это делает,
+        # но можно добавить кастомное сообщение)
+        if not self.title.strip(): # .strip() чтобы убрать пробелы по краям
+            raise ValidationError({'title': 'Название документа не может быть пустым или состоять только из пробелов.'})
+
+    def filename(self):
+        return os.path.basename(self.document.name)

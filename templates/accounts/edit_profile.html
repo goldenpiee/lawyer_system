@@ -1,25 +1,130 @@
+{# templates/accounts/edit_profile.html #}
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
 {% block content %}
 <div class="container">
-    <h2 class="mb-4">Редактировать личную информацию</h2>
-    <form method="post" class="p-4 rounded shadow-sm" style="background: #f8f9fa; max-width: 500px; margin: 0 auto;">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="mb-3">
-                {{ field.label_tag }}
-                {{ field }}
-                {% if field.errors %}
-                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+    <div class="row">
+        {# Форма редактирования профиля #}
+        <div class="col-md-6 mb-4">
+            <h2 class="mb-3">Редактировать личную информацию</h2>
+            <form method="post" class="p-4 rounded shadow-sm bg-light">
+                {% csrf_token %}
+                {% for field in profile_form %}
+                    <div class="mb-3">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger small mt-1">{{ field.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                <button type="submit" name="update_profile" class="btn btn-success">Сохранить изменения профиля</button>
+                <a href="{% url 'accounts:client_profile' %}" class="btn btn-secondary ms-2">Назад к профилю</a>
+            </form>
+        </div>
+
+        {# Форма загрузки и список документов #}
+        <div class="col-md-6">
+            <h2 class="mb-3">Мои общие документы</h2>
+            
+            {% if general_documents %}
+                <ul class="list-group mb-3">
+                    {% for doc in general_documents %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <i class="bi bi-file-earmark-text me-2"></i>
+                                    <a href="{{ doc.document.url }}" target="_blank"><strong>{{ doc.title }}</strong></a>
+                                    {% if doc.description %}
+                                        <small class="text-muted d-block ms-4 fst-italic">{{ doc.description }}</small>
+                                    {% endif %}
+                                    <small class="text-muted d-block ms-4">{{ doc.filename }} ({{ doc.uploaded_at|date:"d.m.Y H:i" }})</small>
+                                </div>
+                                <div>
+                                    {# Форма для удаления документа #}
+                                    <form method="post" action="{% url 'accounts:delete_general_document' doc.id %}" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить документ «{{ doc.title|escapejs }}»?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">У вас пока нет загруженных общих документов.</p>
+            {% endif %}
+
+            {# Форма загрузки нового документа #}
+            <h4 class="mb-3 mt-4">Загрузить новый общий документ</h4>
+            <form method="post" enctype="multipart/form-data" class="p-4 rounded shadow-sm bg-light">
+                {% csrf_token %}
+                
+                <form method="post" enctype="multipart/form-data" class="p-4 rounded shadow-sm bg-light">
+                    {% csrf_token %}
+                    
+                    {% for field in document_form %}
+                        <div class="mb-3">
+                            {% if field.name == 'document' %} {# Специальная обработка для поля 'document' #}
+                                {{ field.label_tag }}
+                                <div class="custom-file-upload">
+                                    {# Скрываем оригинальный input type="file" #}
+                                    {{ field }} 
+                                    {# Наша кастомная кнопка #}
+                                    <label for="{{ field.id_for_label }}" class="btn btn-outline-primary">
+                                        <i class="bi bi-folder-plus me-1"></i> Выбрать файл...
+                                    </label>
+                                    {# Место для отображения имени выбранного файла #}
+                                    <span class="file-name ms-2 text-muted">Файл не выбран</span>
+                                </div>
+                                {% if field.help_text %}
+                                     <small class="form-text text-muted d-block">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in field.errors %}
+                                            {{ error }}<br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% else %} {# Обычный вывод для других полей #}
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {% if field.help_text %}
+                                     <small class="form-text text-muted d-block">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in field.errors %}
+                                            {{ error }}<br>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% if document_form.non_field_errors %}
+                    <div class="alert alert-danger small">
+                        {% for error in document_form.non_field_errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
                 {% endif %}
-            </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-success">Сохранить изменения</button>
-        <a href="{% url 'accounts:client_profile' %}" class="btn btn-secondary ms-2">Отмена</a>
-    </form>
+
+                <button type="submit" name="upload_document" class="btn btn-primary">
+                    <i class="bi bi-upload me-1"></i> Загрузить документ
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 
 
-{# CSS стили, специфичные для этой страницы. Лучше перенести в отдельный CSS файл (например, account.css) #}
+
 <style>
 .profile-edit-field {
     /* Эти стили должны применяться к полям формы, убедитесь, что они имеют этот класс */
@@ -35,7 +140,12 @@
     border-color: #3b82f6 !important;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
-
+.custom-file-upload input[type="file"] {
+    display: none; /* Скрываем оригинальный input #}
+}
+.custom-file-upload label.btn:hover {
+    background-color: #e9ecef; /* Пример светлого фона при наведении */
+}
 form input[type="text"],
 form input[type="email"],
 form textarea,
@@ -77,4 +187,41 @@ form select:focus {
     }
 }
 </style>
-{% endblock %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Находим все скрытые input type="file" внутри .custom-file-upload
+        const fileInputs = document.querySelectorAll('.custom-file-upload input[type="file"]');
+    
+        fileInputs.forEach(function(input) {
+            // Находим соответствующий span для отображения имени файла
+            // Ищем его как следующий элемент-сосед с классом .file-name
+            // Это предполагает, что структура HTML такая, как указано выше
+            const fileNameSpan = input.closest('.custom-file-upload').querySelector('.file-name');
+    
+            if (fileNameSpan) {
+                input.addEventListener('change', function(e) {
+                    if (input.files.length > 0) {
+                        // Отображаем имя первого выбранного файла
+                        fileNameSpan.textContent = input.files[0].name;
+                        fileNameSpan.classList.remove('text-muted'); // Убираем серый цвет, если файл выбран
+                    } else {
+                        fileNameSpan.textContent = 'Файл не выбран';
+                        fileNameSpan.classList.add('text-muted');
+                    }
+                });
+            }
+    
+            // Если метка (кастомная кнопка) существует
+            const customButtonLabel = input.closest('.custom-file-upload').querySelector('label.btn');
+            if (customButtonLabel) {
+                // При клике на кастомную кнопку, программно кликаем по скрытому input
+                // Этот обработчик не нужен, если label связан с input через for="id_input"
+                // customButtonLabel.addEventListener('click', function() {
+                //     input.click(); 
+                // });
+                // Однако, можно оставить для явности или если for атрибут не используется
+            }
+        });
+    });
+</script>
+{%endblock%}

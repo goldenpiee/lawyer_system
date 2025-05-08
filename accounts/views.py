@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
@@ -12,9 +12,10 @@ from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.db import models
 from django.db.models import Q
+from django.http import HttpResponseForbidden 
 from .forms import (
     RegistrationForm, EmailAuthenticationForm, ProfileEditForm,
-    PasswordResetRequestForm, PasswordResetConfirmForm, ClientDocumentForm
+    PasswordResetRequestForm, PasswordResetConfirmForm, ClientDocumentForm, ClientDocument
 )
 
 def home(request):
@@ -102,18 +103,49 @@ def login_view(request):
 
 @login_required
 def edit_profile(request):
-    if request.user.is_staff:
-        messages.error(request, "Редактирование личной информации доступно только клиентам.")
-        return redirect('appointments:lawyer_dashboard')
+    profile_form = ProfileEditForm(instance=request.user)
+    # Инициализируем форму загрузки документа для GET запроса
+    # и если POST был для другой формы
+    document_form = ClientDocumentForm()
+    
+    # Получаем существующие документы для отображения
+    general_documents = request.user.general_documents.all()
+
+
     if request.method == 'POST':
-        form = ProfileEditForm(request.POST, instance=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Личная информация успешно обновлена.")
-            return redirect('accounts:client_profile')  # Изменено с 'appointments:client_dashboard'
-    else:
-        form = ProfileEditForm(instance=request.user)
-    return render(request, 'accounts/edit_profile.html', {'form': form})
+        # Определяем, какая форма была отправлена
+        if 'update_profile' in request.POST: # Предположим, у кнопки формы профиля есть name="update_profile"
+            profile_form = ProfileEditForm(request.POST, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, 'Ваш профиль успешно обновлен.')
+                return redirect('accounts:edit_profile') # Остаемся на странице редактирования
+            else:
+                messages.error(request, 'Пожалуйста, исправьте ошибки в форме профиля.')
+        
+        elif 'upload_document' in request.POST: # У кнопки загрузки будет name="upload_document"
+            # Передаем request.user в instance, чтобы client заполнился автоматически
+            document_form = ClientDocumentForm(request.POST, request.FILES)
+            if document_form.is_valid():
+                new_document = document_form.save(commit=False)
+                new_document.client = request.user # Устанавливаем клиента
+                new_document.save()
+                messages.success(request, f'Документ "{new_document.title}" успешно загружен.')
+                return redirect('accounts:edit_profile') # Остаемся на странице редактирования
+            else:
+                # Сообщаем об ошибке и document_form с ошибками будет передан в контекст
+                error_list = []
+                for field, errors in document_form.errors.items():
+                    for error in errors:
+                        error_list.append(f"{document_form.fields[field].label if field != '__all__' else 'Форма'}: {error}")
+                messages.error(request, "Ошибка загрузки документа: " + " ".join(error_list))
+
+    context = {
+        'profile_form': profile_form,
+        'document_form': document_form, # Передаем форму загрузки
+        'general_documents': general_documents, # Передаем существующие документы
+    }
+    return render(request, 'accounts/edit_profile.html', context)
 
 def password_reset_request(request):
     code_sent = False
@@ -226,3 +258,23 @@ class CustomLoginView(LoginView):
     def form_invalid(self, form):
         messages.error(self.request, 'Неверный email или пароль. Попробуйте снова.')
         return super().form_invalid(form)
+@login_required
+def delete_general_document(request, document_id):
+    document = get_object_or_404(ClientDocument, id=document_id)
+
+    # Проверка, что текущий пользователь является владельцем документа
+    if document.client != request.user:
+        messages.error(request, "У вас нет прав для удаления этого документа.")
+        return redirect('accounts:edit_profile') # или client_profile
+
+    if request.method == 'POST':
+        document_title = document.title # Сохраняем название для сообщения
+        try:
+            document.document.delete(save=True) # Удаляем файл с диска
+            document.delete() # Удаляем запись из БД
+            messages.success(request, f'Документ "{document_title}" успешно удален.')
+        except Exception as e:
+            messages.error(request, f'Ошибка при удалении документа: {e}')
+        return redirect('accounts:edit_profile') # Возвращаемся на страницу редактирования
+    messages.warning(request, "Для удаления документа используйте POST-запрос (кнопку 'Удалить').")
+    return redirect('accounts:edit_profile')
