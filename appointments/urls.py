@@ -20,4 +20,7 @@ urlpatterns = [
     path('appointment/cancel-by-client/<int:appointment_id>/', views.cancel_appointment_client, name='cancel_appointment_client'),
     path('download/general/<int:document_id>/', views.download_general_document, name='download_general_document'),
     path('download/appointment/<int:document_id>/', views.download_appointment_document, name='download_appointment_document'),
+    path('dashboard/appointment/<int:appointment_id>/details/', views.lawyer_appointment_detail_view, name='lawyer_appointment_detail'),
+    path('dashboard/client/<int:client_id>/profile/', views.lawyer_client_profile_view, name='lawyer_client_profile'),
+    path('dashboard/clients/', views.lawyer_clients_list_view, name='lawyer_clients_list'),
 ]

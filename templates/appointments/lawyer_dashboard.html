@@ -1,182 +1,229 @@
+{# templates/appointments/lawyer_dashboard.html #}
 {% extends 'base.html' %}
-{% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4">Панель управления записями</h2>
+{% load static %}
 
+{% block content %}
+<div class="container mt-4 mb-5"> {# Добавил mb-5 для отступа снизу #}
+    <header class="py-3 mb-4 border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0 text-primary"><i class="bi bi-briefcase-fill me-2"></i>Панель юриста</h2>
+            {% if current_view_status_key == 'rejected' and appointments %}
+            <form method="post" action="{% url 'appointments:clear_rejected' %}" class="d-inline"
+                  onsubmit="return confirm('Вы уверены, что хотите удалить все отклонённые записи? Это действие необратимо.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash3"></i> Очистить отклонённые
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </header>
     
-    <!-- Clear Rejected Appointments button -->
-    {% if status == 'rejected' and appointments %}
-    <div class="mb-4">
-        <form method="post" action="{% url 'appointments:clear_rejected' %}" class="d-inline"
-              onsubmit="return confirm('Вы уверены, что хотите удалить все отклонённые записи?');">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-danger">
-                <i class="bi bi-trash"></i> Очистить все отклонённые записи
-            </button>
-        </form>
-    </div>
-    {% endif %}
-    
-    <ul class="nav nav-tabs mb-4">
+    <!-- Навигация по статусам (табы) -->
+    <ul class="nav nav-pills nav-fill mb-4 dashboard-tabs">
         <li class="nav-item">
-            <a class="nav-link {% if status == 'pending' %}active{% endif %}" href="?status=pending">
-                <i class="bi bi-clock"></i> Ожидающие 
-                <span class="status-count pending">{{ pending_count }}</span>
+            <a class="nav-link tab-pending {% if current_view_status_key == 'pending' %}active active-pending{% endif %}" 
+               href="?status=pending">
+                <i class="bi bi-hourglass-split me-1"></i> Ожидающие 
+                <span class="badge rounded-pill ms-1 count-badge count-pending">{{ pending_count }}</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {% if status == 'approved' %}active{% endif %}" href="?status=approved">
-                <i class="bi bi-check-circle"></i> Подтвержденные 
-                <span class="status-count approved">{{ approved_count }}</span>
+            <a class="nav-link tab-approved {% if current_view_status_key == 'approved' %}active active-approved{% endif %}" 
+               href="?status=approved">
+                <i class="bi bi-calendar-check-fill me-1"></i> Подтвержденные 
+                <span class="badge rounded-pill ms-1 count-badge count-approved">{{ approved_count }}</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {% if status == 'rejected' %}active{% endif %}" href="?status=rejected">
-                <i class="bi bi-x-circle"></i> Отклоненные 
-                <span class="status-count rejected">{{ rejected_count }}</span>
+            <a class="nav-link tab-rejected {% if current_view_status_key == 'rejected' %}active active-rejected{% endif %}" 
+               href="?status=rejected">
+                <i class="bi bi-calendar-x-fill me-1"></i> Отклоненные 
+                <span class="badge rounded-pill ms-1 count-badge count-rejected">{{ rejected_count }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link tab-clients {% if request.resolver_match.url_name == 'lawyer_clients_list' %}active active-clients{% endif %}" 
+               href="{% url 'appointments:lawyer_clients_list' %}">
+                <i class="bi bi-people-fill me-1"></i> Мои клиенты
+                {# Если хотите показывать количество уникальных клиентов, нужно передать его из view lawyer_dashboard #}
+                {# <span class="badge rounded-pill ms-1 count-badge count-clients">{{ unique_clients_count }}</span> #}
             </a>
         </li>
     </ul>
 
-    <div class="row">
+    <!-- Список записей -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4"> {# Изменил на xl-3 для больших экранов #}
         {% for appointment in appointments %}
-        <div class="col-md-6 mb-4">
-            <div class="card {% if appointment.status == 'Pending' %}border-warning{% elif appointment.status == 'Approved' %}border-success{% else %}border-danger{% endif %}">
+        <div class="col d-flex align-items-stretch"> {# d-flex и align-items-stretch для одинаковой высоты карточек #}
+            <div class="card flex-fill shadow-sm appointment-card card-status-{{ appointment.status|lower }}">
                 <div class="card-header">
-                    <strong>Запись #{{ appointment.id }}</strong>
-                    <span class="float-end">
-                        {{ appointment.date|date:"d.m.Y" }} в {{ appointment.date|date:"H:i" }}
-                    </span>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">Клиент: {{ appointment.client.full_name }}</h5>
-                    <p class="card-text">
-                        <strong>Телефон:</strong> {{ appointment.client.phone|default:"Не указан" }}<br>
-                        <strong>ФИО:</strong> {{ appointment.client.full_name|default:"Не указано" }}<br>
-                        <strong>Статус:</strong> 
-                        <span class="badge {% if appointment.status == 'Pending' %}bg-warning{% elif appointment.status == 'Approved' %}bg-success{% else %}bg-danger{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 card-appointment-id"><strong>Запись #{{ appointment.id }}</strong></h6>
+                        <span class="badge small appointment-status-badge status-{{ appointment.status|lower }}">
                             {{ appointment.get_status_display }}
                         </span>
+                    </div>
+                    <small class="text-muted card-appointment-date">{{ appointment.date|date:"d F Y, H:i" }}</small>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title mb-1">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <a href="{% url 'appointments:lawyer_client_profile' appointment.client.id %}" class="text-decoration-none stretched-link-except-buttons client-link">
+                            {{ appointment.client.full_name }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted small mb-3 client-phone">
+                        <i class="bi bi-telephone-fill me-1"></i>{{ appointment.client.phone|default_if_none:"Не указан" }}
                     </p>
                     
-                    {% if appointment.status == 'Pending' %}
-                    <div class="btn-group">
-                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="status" value="Approved">
-                            <button type="submit" class="btn btn-success me-2">Подтвердить</button>
-                        </form>
-                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline">
+                    <div class="mt-auto pt-3 actions-block">
+                        <a href="{% url 'appointments:lawyer_appointment_detail' appointment.id %}" class="btn btn-sm btn-outline-secondary mb-2 w-100 view-details-btn">
+                            <i class="bi bi-search me-1"></i> Детали и документы
+                        </a>
+                        
+                        {% if appointment.status == 'Pending' %}
+                        <div class="btn-group w-100" role="group">
+                            <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline w-50">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Approved">
+                                <button type="submit" class="btn btn-sm btn-success w-100 rounded-end-0 approve-btn"><i class="bi bi-check-circle me-1"></i>Одобрить</button>
+                            </form>
+                            <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline w-50">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Rejected">
+                                <button type="submit" class="btn btn-sm btn-danger w-100 rounded-start-0 reject-btn"><i class="bi bi-x-circle me-1"></i>Отклонить</button>
+                            </form>
+                        </div>
+                        {% elif appointment.status == 'Approved' %}
+                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline w-100"
+                              onsubmit="return confirm('Вы уверены, что хотите отменить эту подтвержденную запись? Клиент будет уведомлен.');">
                             {% csrf_token %}
                             <input type="hidden" name="status" value="Rejected">
-                            <button type="submit" class="btn btn-danger">Отклонить</button>
+                            <button type="submit" class="btn btn-sm btn-warning w-100 cancel-btn">
+                                <i class="bi bi-calendar-minus me-1"></i>Отменить запись
+                            </button>
                         </form>
+                        {% elif appointment.status == 'Rejected' %}
+                            <p class="text-center text-muted small mt-2 mb-0">Запись отклонена</p>
+                        {% endif %}
                     </div>
-                    {% elif appointment.status == 'Approved' %}
-                    <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <input type="hidden" name="status" value="Rejected">
-                        <button type="submit" class="btn btn-warning">Отменить запись</button>
-                    </form>
-                    {% endif %}
                 </div>
             </div>
         </div>
         {% empty %}
-        <div class="col-md-6 mx-2">
-            <div class="alert alert-info d-flex align-items-center">
-            <i class="bi bi-info-circle me-2"></i>
-            <div class="text-center w-100">
-                Нет записей в этой категории
-            </div>
+        <div class="col-12">
+            <div class="alert alert-light text-center border py-4" role="alert">
+                <i class="bi bi-journal-richtext me-2 fs-3 align-middle"></i>
+                <span class="align-middle">Нет записей со статусом «{{ current_view_status_russian }}».</span>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+
 <style>
-/* Мобильная адаптивность для карточек и табов */
-@media (max-width: 576px) {
-    .nav-tabs .nav-link {
-        font-size: 0.95rem;
-        padding: 8px 6px;
-    }
-    .card .card-header, .card .card-body {
-        font-size: 0.97rem;
-        padding: 0.7rem 0.8rem;
-    }
-    .btn, .btn-group .btn {
-        font-size: 0.97rem;
-        padding: 8px 10px;
-    }
-    .mb-4 {
-        margin-bottom: 1rem !important;
-    }
-}
-
-/* Стили для табов и бейджей */
-.nav-tabs .nav-link {
-    position: relative;
-    padding: 0.8rem 1.2rem;
-    color: #6c757d;
-    transition: all 0.2s ease;
-    border: none;
-    border-bottom: 2px solid transparent;
-}
-
-.nav-tabs .nav-link:hover {
-    color: #495057;
-    border-color: transparent;
-    background-color: rgba(0,0,0,0.03);
-}
-
-.nav-tabs .nav-link.active {
-    color: #0d6efd;
-    border-color: #0d6efd;
-    background-color: rgba(13,110,253,0.05);
-}
-
-.status-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    margin-left: 8px;
-    font-size: 0.85rem;
+/* Общие улучшения */
+.dashboard-tabs .nav-link {
     font-weight: 500;
-    border-radius: 10px;
+    border-radius: 0.3rem 0.3rem 0 0;
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    border: 1px solid transparent;
+    border-bottom-width: 3px;
+    color: #6c757d; /* Серый цвет для неактивных */
+}
+.dashboard-tabs .nav-link:hover {
+    color: #495057;
 }
 
-.status-count.pending {
-    background-color: rgba(255, 193, 7, 0.2);
-    color: #856404;
+/* Стили для табов по статусам */
+.dashboard-tabs .tab-pending:not(.active):hover { border-bottom-color: #ffda6a; }
+.dashboard-tabs .tab-approved:not(.active):hover { border-bottom-color: #73dd96; }
+.dashboard-tabs .tab-rejected:not(.active):hover { border-bottom-color: #f17c89; }
+
+.dashboard-tabs .nav-link.active-pending {
+    color: #665200 !important;
+    background-color: #fff3cd !important;
+    border-color: #ffc107 !important;
+}
+.dashboard-tabs .nav-link.active-approved {
+    color: #0f5132 !important;
+    background-color: #d1e7dd !important;
+    border-color: #198754 !important;
+}
+.dashboard-tabs .nav-link.active-rejected {
+    color: #58151c !important;
+    background-color: #f8d7da !important;
+    border-color: #dc3545 !important;
 }
 
-.status-count.approved {
-    background-color: rgba(40, 167, 69, 0.2);
-    color: #155724;
+/* Бейджи счетчиков в табах */
+.count-badge { font-size: 0.8em; font-weight: bold; }
+.count-pending { background-color: #ffc107 !important; color: #382e00 !important; }
+.count-approved { background-color: #198754 !important; color: white !important; }
+.count-rejected { background-color: #dc3545 !important; color: white !important; }
+
+/* Карточки записей */
+.appointment-card {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    border-left-width: 8px !important; /* Акцентный бордер слева */
+}
+.appointment-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+.card-status-pending { border-left-color: #ffc107 !important; }
+.card-status-approved { border-left-color: #198754 !important; }
+.card-status-rejected { border-left-color: #dc3545 !important; }
+
+.appointment-card .card-header {
+    background-color: #f8f9fa; /* Слегка серый фон для хедера карточки */
+}
+.card-appointment-id strong { color: #343a40; }
+.card-appointment-date { font-size: 0.85em; }
+
+.appointment-status-badge.small { font-size: 0.8em; }
+.status-pending { background-color: #ffc107 !important; color: #382e00 !important; }
+.status-approved { background-color: #198754 !important; color: white !important; }
+.status-rejected { background-color: #dc3545 !important; color: white !important; }
+
+.client-link { color: var(--bs-primary); }
+.client-link:hover { color: var(--bs-link-hover-color); }
+.client-phone { font-size: 0.9em; }
+
+.actions-block { border-top: 1px solid #eee; }
+.actions-block .btn { font-size: 0.9em; }
+
+/* Чтобы клик по ссылке клиента работал, несмотря на stretched-link */
+.stretched-link-except-buttons::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    content: "";
+}
+.appointment-card .actions-block, .appointment-card .actions-block .btn {
+    position: relative; /* Поднимаем кнопки над stretched-link */
+    z-index: 2;
 }
 
-.status-count.rejected {
-    background-color: rgba(220, 53, 69, 0.2);
-    color: #721c24;
-}
 
-/* Мобильная адаптация */
 @media (max-width: 576px) {
-    .nav-tabs .nav-link {
-        padding: 0.6rem 0.8rem;
+    .dashboard-tabs .nav-link {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
         font-size: 0.9rem;
     }
-    
-    .status-count {
-        min-width: 18px;
-        height: 18px;
-        font-size: 0.8rem;
-        margin-left: 4px;
+    .count-badge { font-size: 0.75em; }
+    .appointment-card .card-body, .appointment-card .card-header {
+        padding: 0.8rem;
     }
+    .actions-block .btn { font-size: 0.85em; }
+    .py-3.mb-4.border-bottom h2 { font-size: 1.5rem; }
 }
 </style>
 {% endblock %}

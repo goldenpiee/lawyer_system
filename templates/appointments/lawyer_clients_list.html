@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4 mb-5 lawyer-clients-list-page">
+
+    <header class="py-3 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h2 class="mb-0 text-primary"><i class="bi bi-people-fill me-2"></i>{{ page_title|default:"Мои клиенты" }}</h2>
+            <a href="{% url 'appointments:lawyer_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left-circle me-1"></i> К панели записей
+            </a>
+        </div>
+    </header>
+    <hr class="mt-0 mb-4">
+
+    {% if clients %}
+        <div class="list-group shadow-sm client-list-items">
+            {% for client in clients %}
+                <div class="list-group-item list-group-item-action p-3 client-list-item">
+                    <a href="{% url 'appointments:lawyer_client_profile' client.id %}" class="stretched-link-except-buttons text-decoration-none"></a>
+                    <div class="row g-2 align-items-center">
+                        <div class="col-auto">
+                            <div class="avatar-placeholder bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                {{ client.full_name|slice:":1"|upper }}
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h5 class="mb-0 client-name">{{ client.full_name }}</h5>
+                            <small class="text-muted client-id d-block d-sm-inline">ID: {{ client.id }}</small>
+                        </div>
+                        <div class="col-12 col-sm-auto text-sm-end mt-2 mt-sm-0 client-contact-info">
+                            <div class="mb-1">
+                                <i class="bi bi-envelope-fill me-1 text-muted"></i><a href="mailto:{{ client.email }}" class="text-body-secondary text-decoration-none contact-link">{{ client.email }}</a>
+                            </div>
+                            {% if client.phone %}
+                                <div>
+                                    <i class="bi bi-telephone-fill me-1 text-muted"></i><a href="tel:{{ client.phone }}" class="text-body-secondary text-decoration-none contact-link">{{ client.phone }}</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                         <div class="col-12 col-md-auto text-md-end mt-2 mt-md-0 client-actions">
+                            <a href="{% url 'appointments:lawyer_client_profile' client.id %}" class="btn btn-sm btn-outline-primary view-profile-btn">
+                                <i class="bi bi-person-vcard"></i> Профиль
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {# Пагинация, если клиентов много (пример) #}
+        {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">«</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">«</span>
+                    </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                    {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                         {% if num == 1 and page_obj.number > 3 %} <li class="page-item disabled"><span class="page-link">...</span></li> {% endif %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% if num == page_obj.paginator.num_pages and page_obj.number < page_obj.paginator.num_pages|add:'-2' %} <li class="page-item disabled"><span class="page-link">...</span></li> {% endif %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">»</span>
+                        </a>
+                    </li>
+                {% else %}
+                     <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">»</span>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="alert alert-light text-center border py-5" role="alert">
+            <i class="bi bi-emoji-frown-fill display-4 mb-3 d-block text-muted"></i>
+            <h4 class="alert-heading">Клиентов пока нет</h4>
+            <p class="mb-0">Когда клиенты начнут записываться к вам, они появятся в этом списке.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.lawyer-clients-list-page header h2 {
+    font-weight: 500;
+}
+
+.client-list-items .list-group-item {
+    border-color: #e9ecef;
+    transition: background-color 0.2s ease-in-out, border-left-color 0.2s ease-in-out, transform 0.15s ease-in-out;
+    border-left-width: 0.25rem;
+    border-left-color: transparent;
+    position: relative; /* Для stretched-link */
+}
+.client-list-items .list-group-item:hover {
+    background-color: #f8f9fa;
+    border-left-color: var(--bs-primary);
+    transform: scale(1.01);
+    z-index: 2; /* Чтобы приподнять при наведении для тени */
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+}
+
+.avatar-placeholder {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 48px;
+    text-align: center;
+}
+
+.client-name {
+    color: var(--bs-dark);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.client-id {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.client-contact-info {
+    font-size: 0.875rem;
+}
+.client-contact-info i.bi {
+    font-size: 1em;
+    color: #6c757d;
+    vertical-align: middle;
+}
+.client-contact-info .contact-link:hover {
+    color: var(--bs-primary) !important;
+    text-decoration: underline !important;
+}
+
+.client-actions .view-profile-btn {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.75rem;
+    position: relative; /* Поднимаем кнопку над stretched-link */
+    z-index: 3;
+}
+
+.stretched-link-except-buttons::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    content: "";
+}
+
+.alert.py-5 .display-4 {
+    font-size: 3rem; /* Уменьшаем иконку, если она слишком большая */
+}
+.alert.py-5 .alert-heading {
+    font-weight: 500;
+}
+
+@media (max-width: 575.98px) {
+    .lawyer-clients-list-page header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    .lawyer-clients-list-page header .btn {
+        margin-top: 0.75rem;
+    }
+    .avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+        line-height: 40px;
+    }
+    .client-name { font-size: 1rem; }
+    .client-id { font-size: 0.75rem; }
+    .client-contact-info { font-size: 0.8rem; }
+    .client-actions .view-profile-btn { width: 100%; margin-top: 0.5rem; }
+    .client-list-item .row > [class*="col-"] {
+        text-align: center; /* Центруем все на мобильных */
+    }
+     .client-list-item .text-sm-end {
+        text-align: center !important;
+    }
+}
+</style>
+{% endblock %}

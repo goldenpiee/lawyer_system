@@ -17,7 +17,7 @@ from zoneinfo import ZoneInfo
 from .forms import AppointmentDocumentForm
 from .models import AppointmentDocument
 from accounts.forms import ClientDocumentForm
-from accounts.models import ClientDocument
+from accounts.models import ClientDocument, CustomUser
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, Http404
@@ -292,33 +292,57 @@ def lawyer_dashboard(request):
         messages.error(request, "Доступ запрещен. Вы не являетесь юристом.")
         return redirect('home')
     
-    status = request.GET.get('status', 'pending')
-    status_map = {
+    status_key = request.GET.get('status', 'pending') 
+    
+    status_display_names_russian = {
+        'pending': 'Ожидающие',
+        'approved': 'Подтвержденные',
+        'rejected': 'Отклоненные'
+    }
+    current_status_russian = status_display_names_russian.get(status_key, 'Ожидающие')
+
+    status_map_db = {
         'pending': 'Pending',
         'approved': 'Approved',
         'rejected': 'Rejected'
     }
     
-    # Filter appointments by current lawyer for all queries
-    base_appointments = Appointment.objects.select_related('client', 'client__lawyerprofile').filter(lawyer=request.user)
+    base_appointments = Appointment.objects.select_related('client').filter(lawyer=request.user)
     
-    # Get counts for status badges
     pending_count = base_appointments.filter(status='Pending').count()
     approved_count = base_appointments.filter(status='Approved').count()
     rejected_count = base_appointments.filter(status='Rejected').count()
     
-    current_status = status_map.get(status, 'pending')
-    appointments = base_appointments.filter(status=current_status).order_by('-date')
+    current_status_db_val = status_map_db.get(status_key, 'Pending')
+    appointments = base_appointments.filter(status=current_status_db_val).order_by('-date')
     
     context = {
         'appointments': appointments,
-        'status': status,
+        'current_view_status_key': status_key, 
+        'current_view_status_russian': current_status_russian,
         'pending_count': pending_count,
         'approved_count': approved_count,
         'rejected_count': rejected_count,
     }
     
     return render(request, 'appointments/lawyer_dashboard.html', context)
+
+@login_required
+@user_passes_test(lambda u: hasattr(u, 'lawyerprofile'), login_url='accounts:login')
+def lawyer_clients_list_view(request):
+    # Получаем ID всех уникальных клиентов, которые делали запись к текущему юристу
+    client_ids = Appointment.objects.filter(lawyer=request.user)\
+                                    .values_list('client_id', flat=True)\
+                                    .distinct()
+    
+    # Получаем объекты этих клиентов
+    clients = CustomUser.objects.filter(id__in=client_ids).order_by('full_name')
+    
+    context = {
+        'clients': clients,
+        'page_title': "Список ваших клиентов" 
+    }
+    return render(request, 'appointments/lawyer_clients_list.html', context)
 
 @login_required
 def update_appointment_status(request, appointment_id):
@@ -528,31 +552,49 @@ def cancel_appointment_client(request, appointment_id):
     }
     return render(request, 'appointments/confirm_cancel_client.html', context) # Новый шаблон
 @login_required
-def appointment_detail_client(request, appointment_id):
-    appointment = get_object_or_404(Appointment, id=appointment_id, client=request.user)
+def appointment_detail(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id) # Получаем запись
+    
+    # Проверка, является ли текущий пользователь клиентом этой записи
+    is_client_owner = (appointment.client == request.user)
+    # Проверка, является ли текущий пользователь юристом этой записи
+    is_lawyer_for_appointment = (hasattr(request.user, 'lawyerprofile') and appointment.lawyer == request.user)
+
+    if not (is_client_owner or is_lawyer_for_appointment): # Если ни то, ни другое, и не суперюзер
+        if not request.user.is_superuser: # Суперюзер может видеть всё (опционально)
+            raise Http404("У вас нет доступа к этой записи.")
+
     documents = appointment.documents.all()
     upload_form = AppointmentDocumentForm()
 
-    if request.method == 'POST':
-        upload_form = AppointmentDocumentForm(request.POST, request.FILES)
-        if upload_form.is_valid():
-            doc = upload_form.save(commit=False)
-            doc.appointment = appointment
-            doc.uploaded_by = request.user
-            doc.save()
-            messages.success(request, f"Файл '{doc.document.name.split('/')[-1]}' успешно загружен.")
-            return redirect('appointments:appointment_detail_client', appointment_id=appointment.id)
-        else:
-            messages.error(request, "Ошибка при загрузке файла.")
+    can_cancel_deadline = appointment.date - timedelta(hours=24)
+    can_cancel = (is_client_owner and 
+                  appointment.status in ['Pending', 'Approved'] and
+                  timezone.now() < can_cancel_deadline)
 
+    if request.method == 'POST':
+        if 'upload_appointment_document' in request.POST: # Уникальное имя для кнопки
+            upload_form = AppointmentDocumentForm(request.POST, request.FILES)
+            if upload_form.is_valid():
+                doc = upload_form.save(commit=False)
+                doc.appointment = appointment
+                doc.uploaded_by = request.user
+                doc.save()
+                messages.success(request, f"Документ '{doc.document.name.split('/')[-1]}' успешно прикреплен.")
+                return redirect('appointments:appointment_detail', appointment_id=appointment.id)
+            else:
+                messages.error(request, "Ошибка при загрузке документа.")
+    
     context = {
         'appointment': appointment,
         'documents': documents,
         'upload_form': upload_form,
-        # ... другие данные для client_profile ...
+        'can_cancel': can_cancel,
+        'is_client_owner': is_client_owner, # Передаем флаг
+        'is_lawyer_for_appointment': is_lawyer_for_appointment, # Передаем флаг
+        'page_title_prefix': "Детали записи" # Для возможного использования в <title>
     }
-    # Используйте существующий client_profile.html или создайте appointment_detail_client.html
-    return render(request, 'accounts/client_profile.html', context)
+    return render(request, 'appointments/appointment_detail.html', context)
 @login_required
 def download_general_document(request, document_id):
     from accounts.models import ClientDocument # Импорт здесь, чтобы избежать цикличности
@@ -641,3 +683,74 @@ def appointment_detail(request, appointment_id): # Используем это �
     }
     # Рендерим специализированный шаблон для деталей записи
     return render(request, 'appointments/appointment_detail.html', context)
+# Права доступа: только для юристов (штатных сотрудников)
+def lawyer_required(function):
+    return user_passes_test(lambda u: u.is_staff and hasattr(u, 'lawyerprofile'))(function)
+
+
+@login_required
+@user_passes_test(lambda u: hasattr(u, 'lawyerprofile'), login_url='accounts:login')
+def lawyer_appointment_detail_view(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id, lawyer=request.user)
+    
+    is_client_owner = False # Юрист не является клиентом этой записи
+    is_lawyer_for_appointment = True # Юрист является юристом этой записи
+
+    documents = appointment.documents.all()
+    upload_form = AppointmentDocumentForm()
+
+    if request.method == 'POST':
+        if 'upload_appointment_document' in request.POST: # Уникальное имя для кнопки (можно то же самое)
+            upload_form = AppointmentDocumentForm(request.POST, request.FILES)
+            if upload_form.is_valid():
+                doc = upload_form.save(commit=False)
+                doc.appointment = appointment
+                doc.uploaded_by = request.user
+                doc.save()
+                messages.success(request, f"Документ '{doc.document.name.split('/')[-1]}' успешно прикреплен.")
+                return redirect('appointments:lawyer_appointment_detail', appointment_id=appointment.id)
+            else:
+                messages.error(request, "Ошибка при загрузке документа.")
+    
+    # Действия юриста (можно вынести в отдельный блок в шаблоне, если они сложнее)
+    can_lawyer_approve = appointment.status == 'Pending'
+    can_lawyer_cancel_approved = appointment.status == 'Approved'
+
+    context = {
+        'appointment': appointment,
+        'documents': documents,
+        'upload_form': upload_form,
+        'is_client_owner': is_client_owner,
+        'is_lawyer_for_appointment': is_lawyer_for_appointment,
+        'can_lawyer_approve': can_lawyer_approve, # Флаг для кнопки "Одобрить"
+        'can_lawyer_cancel_approved': can_lawyer_cancel_approved, # Флаг для кнопки "Отменить" (для одобренных)
+        'page_title_prefix': "Детали записи (Панель юриста)" # Для возможного использования в <title>
+    }
+    # ИСПОЛЬЗУЕМ ТОТ ЖЕ ШАБЛОН
+    return render(request, 'appointments/appointment_detail.html', context)
+
+
+@login_required
+@lawyer_required
+def lawyer_client_profile_view(request, client_id):
+    # Получаем клиента. Убедимся, что это действительно клиент (не юрист и не админ)
+    # Хотя, если юрист хочет посмотреть профиль другого юриста/админа - это тоже может быть кейс.
+    # Пока оставим просто получение пользователя.
+    client_user = get_object_or_404(CustomUser, id=client_id)
+
+    # Получаем записи этого клиента именно с ТЕКУЩИМ юристом
+    client_appointments_with_this_lawyer = Appointment.objects.filter(
+        client=client_user,
+        lawyer=request.user
+    ).select_related('lawyer').order_by('-date')
+    
+    # Общие документы клиента
+    general_client_documents = client_user.general_documents.all()
+
+    context = {
+        'client_user': client_user, # Пользователь-клиент
+        'appointments': client_appointments_with_this_lawyer,
+        'general_documents': general_client_documents,
+        # Можно добавить здесь форму загрузки общего документа юристом для клиента, если нужно
+    }
+    return render(request, 'appointments/lawyer_client_profile.html', context)
