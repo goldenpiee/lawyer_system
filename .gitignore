@@ -18,6 +18,7 @@ __pycache__/
 
 # Static & Media
 /staticfiles/
+/media/
 
 # Virtual environment
 venv/
