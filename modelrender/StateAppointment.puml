@@ -1,0 +1,34 @@
+@startuml StateAppointmentCorrected
+skinparam state {
+  BackgroundColor<<Pending>> LightYellow
+  BackgroundColor<<Approved>> LightGreen
+  BackgroundColor<<Rejected>> LightCoral
+  BackgroundColor<<Completed>> LightBlue
+  BorderColor Gray
+}
+
+[*] --> Pending
+Pending : Ожидает подтверждения
+
+Pending --> Approved : Юрист подтверждает
+Pending --> Rejected : Юрист отклоняет
+Pending --> Rejected : Клиент отменяет\n(до подтверждения)
+
+Approved : Подтверждена юристом
+Approved --> Completed : Консультация состоялась
+Approved --> Rejected : Юрист отменяет\nподтвержденную запись
+Approved --> Rejected : Клиент отменяет\n(по правилам, >24ч)
+
+Rejected : Отклонена/Отменена
+Rejected --> [*]
+
+Completed : Завершена
+Completed --> [*]
+
+note right of Approved
+  Отмена клиентом
+  подтвержденной записи
+  может иметь свои правила
+  (например, срок >24ч).
+end note
+@enduml

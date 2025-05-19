@@ -1,0 +1,68 @@
+@startuml ClassDiagramCorrected
+skinparam classAttributeIconSize 0
+
+abstract class AbstractUser {
+  +email
+  +password
+  +full_name
+  +phone
+  +is_active
+  +is_staff
+  +date_joined
+  +last_login
+  --
+  +create_user()
+  +create_superuser()
+}
+
+class CustomUser extends AbstractUser {
+  +email : String <<ID>>
+  +full_name : String
+  +phone : String
+  +objects : CustomUserManager <<FK>>
+}
+note right of CustomUser::objects
+  Менеджер модели Django,
+  обеспечивает методы
+  create_user, create_superuser
+end note
+
+class CustomUserManager {
+  +create_user(email, full_name, phone, password) : CustomUser
+  +create_superuser(email, full_name, phone, password) : CustomUser
+}
+' Связь между CustomUser и CustomUserManager не является стандартной UML ассоциацией,
+' это особенность Django. Мы можем показать это через зависимость или примечание.
+' CustomUser ..> CustomUserManager : uses > (или просто оставить примечание)
+
+class LawyerProfile {
+  +specialization : String
+  +office_address : String
+}
+CustomUser "1" -- "0..1" LawyerProfile : user (Профиль юриста)
+
+class CalendarSlot {
+  +id : Integer <<PK>>
+  +start_time : DateTime
+  +end_time : DateTime
+  +is_booked : Boolean
+  +created_at : DateTime
+  +updated_at : DateTime
+}
+CustomUser "1" -- "0..*" CalendarSlot : lawyer (Слоты юриста)
+
+class Appointment {
+  +id : Integer <<PK>>
+  +date : DateTime
+  +status : String {Pending, Approved, Rejected, Completed}
+  +created_at : DateTime
+  +updated_at : DateTime
+}
+CustomUser "1" -- "0..*" Appointment : client (Записи клиента)
+CustomUser "1" -- "0..*" Appointment : lawyer (Записи у юриста)
+CalendarSlot "1" -- "0..1" Appointment : slot (Слот для записи)
+
+
+note "Статус может быть реализован\nкак CharField с choices" as N1
+Appointment .. N1
+@enduml

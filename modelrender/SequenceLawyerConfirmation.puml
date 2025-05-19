@@ -1,0 +1,30 @@
+@startuml SequenceLawyerConfirmation
+autonumber
+actor Юрист
+participant "Панель юриста (Frontend)" as AdminFE
+participant "Сервер (Backend)" as BE
+database "База данных" as DB
+
+Юрист -> AdminFE : Входит в панель, открывает список заявок
+AdminFE -> BE : Запрос списка заявок (status='Pending')
+BE -> DB : Получить Appointment (status='Pending', lawyer_id=current_lawyer)
+DB --> BE : Список ожидающих заявок
+BE --> AdminFE : Отобразить список заявок
+AdminFE --> Юрист : Показывает список заявок
+
+Юрист -> AdminFE : Выбирает заявку и нажимает "Подтвердить"
+AdminFE -> BE : Запрос на подтверждение (appointment_id, new_status='Approved')
+BE -> DB : Найти Appointment (appointment_id)
+DB --> BE : Данные записи
+alt Запись найдена и статус 'Pending'
+  BE -> DB : Обновить Appointment (status='Approved')
+  DB --> BE : Запись обновлена
+  note right BE : Также можно обновить CalendarSlot, если он не был заблокирован сразу
+  BE -> BE : Инициировать отправку Email клиенту (о подтверждении записи)
+  BE --> AdminFE : Успешное подтверждение
+  AdminFE --> Юрист : "Запись успешно подтверждена"
+else Запись не найдена или статус изменен
+  BE --> AdminFE : Ошибка: Запись не может быть подтверждена
+  AdminFE --> Юрист : "Ошибка при подтверждении записи"
+end
+@enduml
