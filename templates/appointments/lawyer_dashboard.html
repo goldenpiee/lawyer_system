@@ -1,0 +1,121 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <header class="py-3 mb-4 border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0 text-primary"><i class="bi bi-briefcase-fill me-2"></i>Панель юриста</h2>
+            {% if current_view_status_key == 'rejected' and appointments %}
+            <form method="post" action="{% url 'appointments:clear_rejected' %}" class="d-inline"
+                  onsubmit="return confirm('Вы уверены, что хотите удалить все отклонённые записи? Это действие необратимо.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash3"></i> Очистить отклонённые
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </header>
+
+    <ul class="nav nav-pills nav-fill mb-4 dashboard-tabs">
+        <li class="nav-item">
+            <a class="nav-link tab-pending {% if current_view_status_key == 'pending' %}active active-pending{% endif %}" 
+               href="?status=pending">
+                <i class="bi bi-hourglass-split me-1"></i> Ожидающие 
+                <span class="badge rounded-pill ms-1 count-badge count-pending">{{ pending_count }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link tab-approved {% if current_view_status_key == 'approved' %}active active-approved{% endif %}" 
+               href="?status=approved">
+                <i class="bi bi-calendar-check-fill me-1"></i> Подтвержденные 
+                <span class="badge rounded-pill ms-1 count-badge count-approved">{{ approved_count }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link tab-rejected {% if current_view_status_key == 'rejected' %}active active-rejected{% endif %}" 
+               href="?status=rejected">
+                <i class="bi bi-calendar-x-fill me-1"></i> Отклоненные 
+                <span class="badge rounded-pill ms-1 count-badge count-rejected">{{ rejected_count }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link tab-clients {% if request.resolver_match.url_name == 'lawyer_clients_list' %}active active-clients{% endif %}" 
+               href="{% url 'appointments:lawyer_clients_list' %}">
+                <i class="bi bi-people-fill me-1"></i> Мои клиенты
+            </a>
+        </li>
+    </ul>
+
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        {% for appointment in appointments %}
+        <div class="col d-flex align-items-stretch">
+            <div class="card flex-fill shadow-sm appointment-card card-status-{{ appointment.status|lower }}">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 card-appointment-id"><strong>Запись #{{ appointment.id }}</strong></h6>
+                        <span class="badge small appointment-status-badge status-{{ appointment.status|lower }}">
+                            {{ appointment.get_status_display }}
+                        </span>
+                    </div>
+                    <small class="text-muted card-appointment-date">{{ appointment.date|date:"d F Y, H:i" }}</small>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title mb-1">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <a href="{% url 'appointments:lawyer_client_profile' appointment.client.id %}" class="text-decoration-none stretched-link-except-buttons client-link">
+                            {{ appointment.client.full_name }}
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted small mb-3 client-phone">
+                        <i class="bi bi-telephone-fill me-1"></i>{{ appointment.client.phone|default_if_none:"Не указан" }}
+                    </p>
+                    
+                    <div class="mt-auto pt-3 actions-block">
+                        <a href="{% url 'appointments:lawyer_appointment_detail' appointment.id %}" class="btn btn-sm btn-outline-secondary mb-2 w-100 view-details-btn">
+                            <i class="bi bi-search me-1"></i> Детали и документы
+                        </a>
+                        
+                        {% if appointment.status == 'Pending' %}
+                        <div class="btn-group w-100" role="group">
+                            <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline w-50">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Approved">
+                                <button type="submit" class="btn btn-sm btn-success w-100 rounded-end-0 approve-btn"><i class="bi bi-check-circle me-1"></i>Одобрить</button>
+                            </form>
+                            <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline w-50">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="Rejected">
+                                <button type="submit" class="btn btn-sm btn-danger w-100 rounded-start-0 reject-btn"><i class="bi bi-x-circle me-1"></i>Отклонить</button>
+                            </form>
+                        </div>
+                        {% elif appointment.status == 'Approved' %}
+                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline w-100"
+                              onsubmit="return confirm('Вы уверены, что хотите отменить эту подтвержденную запись? Клиент будет уведомлен.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Rejected">
+                            <button type="submit" class="btn btn-sm btn-warning w-100 cancel-btn">
+                                <i class="bi bi-calendar-minus me-1"></i>Отменить запись
+                            </button>
+                        </form>
+                        {% elif appointment.status == 'Rejected' %}
+                            <p class="text-center text-muted small mt-2 mb-0">Запись отклонена</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-light text-center border py-4" role="alert">
+                <i class="bi bi-journal-richtext me-2 fs-3 align-middle"></i>
+                <span class="align-middle">Нет записей со статусом «{{ current_view_status_russian }}».</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

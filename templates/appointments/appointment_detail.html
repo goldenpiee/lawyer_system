@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block extra_head %}
+{% endblock %}
+{% block content %}
+<div class="container my-4 my-md-5 detail-page-container">
+    <div class="card detail-card">
+        <div class="card-header detail-card-header {% if is_lawyer_for_appointment %}lawyer-view{% endif %}">
+            <h3>
+                {{ page_title_prefix|default:"Детали записи" }}
+                <span class="fw-normal">#{{ appointment.id }}</span>
+            </h3>
+        </div>
+        <div class="card-body detail-card-body">
+            <div class="info-grid mb-3">
+                {% if is_lawyer_for_appointment %}
+                    <p><i class="bi bi-person-circle"></i><strong>Клиент:</strong> 
+                        <span class="value">
+                            <a href="{% url 'appointments:lawyer_client_profile' appointment.client.id %}" class="text-decoration-none fw-medium">
+                                {{ appointment.client.full_name }}
+                            </a>
+                            ({{ appointment.client.email }})
+                        </span>
+                    </p>
+                     <p><i class="bi bi-telephone"></i><strong>Телефон клиента:</strong> <span class="value">{{ appointment.client.phone|default_if_none:"Не указан" }}</span></p>
+                {% else %}
+                    <p><i class="bi bi-person-check"></i><strong>Клиент:</strong> <span class="value">{{ appointment.client.full_name }}</span></p>
+                    <p><i class="bi bi-briefcase"></i><strong>Юрист:</strong> <span class="value">{{ appointment.lawyer.full_name }}</span></p>
+                {% endif %}
+                <p><i class="bi bi-calendar-event"></i><strong>Дата и время:</strong> <span class="value">{{ appointment.date|date:"l, j F Y, H:i" }} (МСК)</span></p>
+                <p><i class="bi bi-bar-chart-steps"></i><strong>Статус:</strong>
+                    <span class="value ms-1">
+                        <span class="badge status-badge-lg status-{{ appointment.status|lower }}">
+                            {{ appointment.get_status_display }}
+                        </span>
+                    </span>
+                </p>
+            </div>
+
+            <hr class="section-divider">
+
+            {% if is_lawyer_for_appointment and can_lawyer_approve or can_lawyer_cancel_approved %}
+                <div class="mb-4 action-buttons text-center">
+                    <h5 class="section-title justify-content-center mb-3"><i class="bi bi-pencil-square text-primary"></i>Действия с записью</h5>
+                    {% if can_lawyer_approve %}
+                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline-block me-md-2 mb-2 mb-md-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Approved">
+                            <button type="submit" class="btn btn-success"><i class="bi bi-check-circle-fill me-2"></i>Подтвердить</button>
+                        </form>
+                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline-block">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Rejected">
+                            <button type="submit" class="btn btn-danger"><i class="bi bi-x-circle-fill me-2"></i>Отклонить</button>
+                        </form>
+                    {% elif can_lawyer_cancel_approved %}
+                        <form method="post" action="{% url 'appointments:update_status' appointment.id %}" class="d-inline-block" onsubmit="return confirm('Отменить подтвержденную запись клиента? Он будет уведомлен.');">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="Rejected">
+                            <button type="submit" class="btn btn-warning"><i class="bi bi-calendar-x-fill me-2"></i>Отменить запись</button>
+                        </form>
+                    {% endif %}
+                </div>
+                 <hr class="section-divider">
+            {% endif %}
+
+            {% if is_client_owner and can_cancel %}
+            <div class="mb-4 action-buttons text-center">
+                 <h5 class="section-title justify-content-center mb-3"><i class="bi bi-hand-index-thumb text-warning"></i>Мое действие</h5>
+                <a href="{% url 'appointments:cancel_appointment_client' appointment.id %}" class="btn btn-warning d-inline-flex align-items-center justify-content-center">
+                    <i class="bi bi-calendar-x-fill me-2"></i>Отменить мою запись
+                </a>
+            </div>
+             <hr class="section-divider">
+            {% endif %}
+
+            <h4 class="section-title"><i class="bi bi-paperclip text-primary"></i>Документы к этой записи</h4>
+            {% if documents %}
+                <ul class="list-group list-group-flush document-list mb-4">
+                {% for doc in documents %}
+                    <li class="list-group-item py-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap"> 
+                                <i class="bi bi-file-earmark-arrow-down-fill text-primary me-2 fs-5 align-middle"></i>
+                                <a href="{% url 'appointments:download_appointment_document' doc.id %}" target="_blank" class="document-link align-middle">{{ doc.document.name|filename }}</a>
+                                {% if doc.description %}<small class="text-muted d-block ps-4 ms-3 mt-1"><em>{{ doc.description }}</em></small>{% endif %}
+                            </div>
+                            <small class="text-muted document-meta text-nowrap">
+                                {% if doc.uploaded_by %}
+                                    <i class="bi bi-person-fill"></i> {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.email }}<br class="d-block d-sm-none"> 
+                                    <span class="d-none d-sm-inline">| </span>
+                                {% endif %}
+                               <i class="bi bi-clock-history"></i> {{ doc.uploaded_at|date:"d.m.Y, H:i" }}
+                            </small>
+                        </div>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-light text-center border-dashed py-3" role="alert">
+                    <i class="bi bi-inbox me-2"></i>К этой записи документы пока не прикреплены.
+                </div>
+            {% endif %}
+
+            {% if is_client_owner or is_lawyer_for_appointment %}
+            <hr class="section-divider">
+            <div class="upload-form-section p-3 p-md-4">
+                <h5 class="section-title mb-3"><i class="bi bi-cloud-arrow-up-fill text-success"></i>Прикрепить новый документ</h5>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="upload_appointment_document" value="true">
+
+                    {% if upload_form.description %}
+                    <div class="mb-3">
+                        {{ upload_form.description.label_tag }}
+                        {{ upload_form.description }}
+                        {% if upload_form.description.errors %}
+                            <div class="text-danger small mt-1">{{ upload_form.description.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if upload_form.document %}
+                    <div class="mb-3">
+                        <label for="{{ upload_form.document.id_for_label }}" class="form-label">{{ upload_form.document.label }}</label>
+                        <div class="custom-file-upload d-flex align-items-center flex-wrap">
+                            {{ upload_form.document }} 
+                            <label for="{{ upload_form.document.id_for_label }}" class="btn btn-outline-primary btn-file-select me-2 mb-2 mb-sm-0">
+                                <i class="bi bi-paperclip me-1"></i> Выбрать файл...
+                            </label>
+                            <span class="file-name-display flex-grow-1">Файл не выбран</span>
+                        </div>
+                        {% if upload_form.document.help_text %}
+                            <small class="form-text text-muted d-block mt-1">{{ upload_form.document.help_text }}</small>
+                        {% endif %}
+                        {% if upload_form.document.errors %}
+                            <div class="text-danger small mt-1">{{ upload_form.document.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    {% if upload_form.non_field_errors %}
+                        <div class="alert alert-danger small py-2">
+                            {{ upload_form.non_field_errors|join:", " }}
+                        </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-success mt-2 d-inline-flex align-items-center">
+                        <i class="bi bi-upload me-2"></i> Загрузить документ
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <div class="action-buttons-footer text-center">
+                {% if is_lawyer_for_appointment %}
+                     <a href="{% url 'appointments:lawyer_dashboard' %}" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center">
+                        <i class="bi bi-arrow-left-circle-fill me-2"></i>Назад к панели управления
+                    </a>
+                {% elif is_client_owner %}
+                    <a href="{% url 'accounts:client_profile' %}" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-circle me-2"></i>Назад к моему профилю
+                    </a>
+                {% else %}
+                     <a href="{% url 'home' %}" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center">
+                        <i class="bi bi-house-door-fill me-2"></i>На главную
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileUploadContainers = document.querySelectorAll('.custom-file-upload');
+    fileUploadContainers.forEach(function(container) {
+        const input = container.querySelector('input[type="file"]');
+        const displaySpan = container.querySelector('.file-name-display');
+        if (input && displaySpan) {
+            input.addEventListener('change', function(e) {
+                if (input.files.length > 0) {
+                    displaySpan.textContent = input.files[0].name;
+                    displaySpan.classList.remove('text-muted');
+                } else {
+                    displaySpan.textContent = 'Файл не выбран';
+                    displaySpan.classList.add('text-muted');
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

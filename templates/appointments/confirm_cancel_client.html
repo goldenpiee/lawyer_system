@@ -1,0 +1,37 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container my-4 my-md-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+            <div class="card confirm-card">
+                <div class="card-header confirm-card-header">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <h4>Подтверждение отмены записи</h4>
+                </div>
+                <div class="card-body confirm-card-body">
+                    <p class="lead text-center">Вы уверены, что хотите отменить вашу запись?</p>
+                    
+                    <div class="text-center mb-4 appointment-details">
+                        <p class="mb-1"><strong>Юрист:</strong> {{ appointment.lawyer.full_name }}</p>
+                        <p><strong>Дата и время:</strong> {{ appointment.date|date:"l, j F Y, H:i" }} (МСК)</p>
+                    </div>
+                    
+                    <form method="post" class="text-center">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center confirm-actions">
+                            <a href="{{ request.META.HTTP_REFERER|default:request.user.get_absolute_url }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-lg me-1"></i>Нет, вернуться
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-check-lg me-1"></i>Да, отменить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

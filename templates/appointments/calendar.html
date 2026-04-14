@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'calendar.css' %}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="messages-container"></div>
+{% csrf_token %}
+<div class="container calendar-container"> 
+
+    <div class="d-flex justify-content-between align-items-center mb-4 calendar-navigation">
+        <button class="btn btn-outline-primary btn-sm" onclick="changeMonth(-1)">« Предыдущий месяц</button> 
+        <h1 class="text-center mb-0 month-header" id="month-header"></h1>
+        <button class="btn btn-outline-primary btn-sm" onclick="changeMonth(1)">Следующий месяц »</button>
+    </div>
+
+    {% if user.lawyerprofile %}
+    <div class="lawyer-controls mb-3 text-center">
+        <a href="{% url 'appointments:generate_slots_days' %}" class="btn btn-primary btn-sm mb-2">
+           <i class="bi bi-calendar-plus me-1"></i> Генерировать по дням
+        </a>
+        <button id="deleteAllSlotsBtn" class="btn btn-danger btn-sm mb-2">
+            <i class="bi bi-trash3 me-1"></i> Удалить все слоты
+        </button>
+    </div>
+    {% endif %}
+
+
+    <div class="row row-cols-7 weekdays-row g-2 mb-2">
+        <div class="col text-center fw-bold">Пн</div>
+        <div class="col text-center fw-bold">Вт</div>
+        <div class="col text-center fw-bold">Ср</div>
+        <div class="col text-center fw-bold">Чт</div>
+        <div class="col text-center fw-bold">Пт</div>
+        <div class="col text-center fw-bold">Сб</div>
+        <div class="col text-center fw-bold">Вс</div>
+    </div>
+
+    <div id="calendar-grid">
+    </div>
+    <div id="time-slots" class="mt-4 card time-slots-card d-none">
+        <div class="card-body">
+            <h4 class="card-title selected-date-header" id="selected-date"></h4>
+            <div id="choose-time-label" class="mb-3 text-primary fw-bold d-none"> 
+                <i class="bi bi-clock me-1"></i> Выберите время для записи:
+            </div>
+            <div id="slot-list" class="mb-3">
+            </div>
+            {% if user.lawyerprofile %}
+                <button id="confirm-btn" class="btn btn-danger w-100 mb-3 d-none" onclick="deleteSlot(selectedSlotId)">
+                    <i class="bi bi-trash me-1"></i> Удалить выбранный слот
+                </button>
+                <button id="add-time-btn" class="btn btn-primary w-100" onclick="openCreateSlotModal(selectedDateForSlot)">
+                   <i class="bi bi-plus-circle me-1"></i> Добавить время на этот день
+                </button>
+            {% else %}
+                <button id="confirm-btn" class="btn btn-success w-100 mb-3 d-none" onclick="bookSlot(selectedSlotId)">
+                   <i class="bi bi-check-circle me-1"></i> Записаться на выбранное время
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if user.lawyerprofile %}
+    <div id="createSlotForm" class="card mt-3 create-slot-card d-none">
+        <div class="card-body p-4">
+            <h5 class="card-title mb-4 text-center">Создание слота на <span id="selectedDateDisplay" class="text-primary"></span></h5>
+             <label for="slotStartTime" class="form-label mb-1">Выберите время:</label>
+            <select id="slotStartTime" class="form-select form-select-sm mb-3">
+                <option value="" selected disabled>-- Время --</option> 
+                <option value="09:00">09:00</option>
+                <option value="09:30">09:30</option>
+                <option value="10:00">10:00</option>
+                <option value="10:30">10:30</option>
+                <option value="11:00">11:00</option>
+                <option value="11:30">11:30</option>
+                <option value="12:00">12:00</option>
+                <option value="12:30">12:30</option>
+                <option value="13:00">13:00</option>
+                <option value="13:30">13:30</option>
+                <option value="14:00">14:00</option>
+                <option value="14:30">14:30</option>
+                <option value="15:00">15:00</option>
+                <option value="15:30">15:30</option>
+                <option value="16:00">16:00</option>
+                <option value="16:30">16:30</option>
+                <option value="17:00">17:00</option>
+                 <option value="17:30">17:30</option>
+                 <option value="18:00">18:00</option>
+            </select>
+            <div class="d-flex justify-content-between gap-2">
+                <button type="button" class="btn btn-secondary btn-sm flex-grow-1" onclick="hideCreateSlotForm()">
+                    <i class="bi bi-x-lg me-1"></i> Отмена
+                </button>
+                <button type="button" class="btn btn-primary btn-sm flex-grow-1" onclick="createSlot()">
+                    <i class="bi bi-check-lg me-1"></i> Создать слот
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% if user.lawyerprofile %}
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"> 
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="lead">Вы действительно хотите удалить **все** доступные для записи слоты?</p>
+                <p class="text-danger fw-bold" id="deleteCountdown"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
+                   <i class="bi bi-trash3-fill me-1"></i> Удалить все
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+    window.isLawyer = {{ user.lawyerprofile|yesno:"true,false" }};
+    window.slotsData = JSON.parse('{{ slots_json|escapejs }}');
+    window.initialDateStr = '{{ current_date|default:"" }}';
+    window.csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+</script>
+<script src="{% static 'js/calendar.js' %}"></script>
+{% endblock %}
