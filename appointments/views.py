@@ -16,6 +16,7 @@ from accounts.models import ClientDocument, CustomUser
 from appointments.utils import send_email_notification
 import json
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
 
 def is_lawyer(user):
     return user.is_authenticated and hasattr(user, 'lawyerprofile')
@@ -24,27 +25,35 @@ lawyer_required = user_passes_test(is_lawyer, login_url='accounts:login')
 
 @login_required
 def create_appointment(request, slot_id):
-    slot = get_object_or_404(CalendarSlot, pk=slot_id)
-    
-    if slot.start_time < timezone.now() or slot.is_booked:
-        messages.error(request, "Слот недоступен")
-        return redirect('appointments:calendar')
+    with transaction.atomic(): 
+        slot = get_object_or_404(CalendarSlot, pk=slot_id)
+        
+        if slot.start_time < timezone.now() or slot.is_booked:
+            messages.error(request, "Слот недоступен")
+            return redirect('appointments:calendar')
 
-    existing_rejected = Appointment.objects.filter(lawyer=slot.lawyer, date=slot.start_time, status='Rejected').first()
-    
-    if existing_rejected:
-        existing_rejected.status = 'Pending'
-        existing_rejected.client = request.user
-        existing_rejected.save()
-    else:
-        Appointment.objects.create(client=request.user, lawyer=slot.lawyer, date=slot.start_time, status='Pending')
+        existing_rejected = Appointment.objects.filter(
+            lawyer=slot.lawyer, date=slot.start_time, status='Rejected'
+        ).first()
+        
+        if existing_rejected:
+            existing_rejected.status = 'Pending'
+            existing_rejected.client = request.user
+            existing_rejected.save()
+        else:
+            Appointment.objects.create(
+                client=request.user,
+                lawyer=slot.lawyer,
+                date=slot.start_time,
+                status='Pending'
+            )
 
-    slot.is_booked = True
-    slot.save()
-    
-    local_dt = slot.start_time.astimezone(ZoneInfo('Europe/Moscow'))
-    messages.success(request, f"Запись создана на {local_dt.strftime('%d.%m.%Y %H:%M')}")
-    return redirect('accounts:client_profile')
+        slot.is_booked = True
+        slot.save()
+        
+        local_dt = slot.start_time.astimezone(ZoneInfo('Europe/Moscow'))
+        messages.success(request, f"Запись создана на {local_dt.strftime('%d.%m.%Y %H:%M')}")
+        return redirect('accounts:client_profile')
 
 @login_required
 @lawyer_required
@@ -137,24 +146,26 @@ def update_appointment_status(request, appointment_id):
         new_status = request.POST.get('status')
         
         if new_status in ['Approved', 'Rejected']:
-            appointment.status = new_status
-            appointment.save()
-            
-            slot, created = CalendarSlot.objects.get_or_create(
-                lawyer=appointment.lawyer, start_time=appointment.date,
-                defaults={'end_time': appointment.date + timedelta(minutes=30)}
-            )
-            
-            if new_status == 'Rejected':
-                slot.is_booked = False
-                slot.save()
-                subject, body = 'Заявка отклонена', f'Запись на {appointment.date.strftime("%d.%m.%Y")} отклонена.'
-            else:
-                subject, body = 'Заявка подтверждена', f'Ждем вас {appointment.date.strftime("%d.%m.%Y %H:%M")}.'
+            with transaction.atomic():   # <-- транзакция
+                appointment.status = new_status
+                appointment.save()
                 
-            send_email_notification(subject, body, appointment.client.email)
-            messages.success(request, 'Статус обновлен')
-            
+                slot, created = CalendarSlot.objects.get_or_create(
+                    lawyer=appointment.lawyer,
+                    start_time=appointment.date,
+                    defaults={'end_time': appointment.date + timedelta(minutes=30)}
+                )
+                
+                if new_status == 'Rejected':
+                    slot.is_booked = False
+                    slot.save()
+                    subject, body = 'Заявка отклонена', f'Запись на {appointment.date.strftime("%d.%m.%Y")} отклонена.'
+                else:
+                    subject, body = 'Заявка подтверждена', f'Ждем вас {appointment.date.strftime("%d.%m.%Y %H:%M")}.'
+                    
+                send_email_notification(subject, body, appointment.client.email)
+                messages.success(request, 'Статус обновлен')
+                
     return redirect('appointments:lawyer_dashboard')
 
 @login_required

@@ -1,56 +1,63 @@
 {% extends 'base.html' %}
 {% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'css/generate_slots.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="card shadow">
         <div class="card-body">
-            <h2 class="card-title mb-4 text-center">Генерация слотов по дням</h2> 
+            <h2 class="card-title mb-4 text-center">Генерация слотов по дням</h2>
             <div class="mb-3">
-                <a href="{% url 'appointments:calendar' %}" class="btn btn-secondary btn-sm"> 
-                    <i class="bi bi-arrow-left me-1"></i> Вернуться к календарю 
+                <a href="{% url 'appointments:calendar' %}" class="btn btn-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Вернуться к календарю
                 </a>
             </div>
 
             {% if success %}
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
-                        showTemporaryMessage("Успешно создано слотов: {{ slots_created }}", "success");
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("Успешно создано слотов: {{ slots_created }}", "success");
+                        }
                     });
                 </script>
             {% endif %}
             {% if error %}
-                 <script>
+                <script>
                     document.addEventListener('DOMContentLoaded', function() {
-                        showTemporaryMessage("{{ error|escapejs }}", "danger");
+                        if (typeof showTemporaryMessage === 'function') {
+                            showTemporaryMessage("{{ error|escapejs }}", "danger");
+                        }
                     });
                 </script>
             {% endif %}
 
-            <div class="row g-lg-4 g-md-3 g-2"> 
+            <div class="row g-lg-4 g-md-3 g-2">
                 <div class="col-lg-7 col-md-6 order-md-1 order-2">
                     <div class="calendar-container bg-white p-3 rounded shadow-sm mb-3 mb-md-0">
                         <div id="calendar-days"></div>
                     </div>
                 </div>
-                 <div class="col-lg-5 col-md-6 order-md-2 order-1">
+                <div class="col-lg-5 col-md-6 order-md-2 order-1">
                     <form id="generateSlotsForm" method="post" class="bg-white p-3 rounded shadow-sm">
                         {% csrf_token %}
                         <input type="hidden" name="selected_dates" id="selectedDatesInput">
-
-                        <div class="form-group mb-3"> 
+                        <div class="form-group mb-3">
                             <label class="form-label fw-bold">Выбранные дни:</label>
-                             <div id="selectedDatesDisplay" class="selected-dates p-2 rounded bg-light border">
-                                <em class="text-muted small">Нет выбранных дней</em> 
+                            <div id="selectedDatesDisplay" class="selected-dates p-2 rounded bg-light border">
+                                <em class="text-muted small">Нет выбранных дней</em>
                             </div>
                         </div>
-
                         <div class="time-picker mb-3">
-                            <label class="form-label fw-bold mb-1">Время работы:</label> 
+                            <label class="form-label fw-bold mb-1">Время работы:</label>
                             <div class="d-flex gap-2 align-items-center">
                                 <div class="flex-grow-1">
                                     <label for="start_time_select" class="small text-muted">Начало</label>
-                                    <select id="start_time_select" name="start_time" class="form-select form-select-sm" required> 
-                                        <option value="" selected disabled>--:--</option> 
+                                    <select id="start_time_select" name="start_time" class="form-select form-select-sm" required>
+                                        <option value="" selected disabled>--:--</option>
                                         <option value="09:00">09:00</option>
                                         <option value="09:30">09:30</option>
                                         <option value="10:00">10:00</option>
@@ -68,7 +75,7 @@
                                         <option value="16:00">16:00</option>
                                         <option value="16:30">16:30</option>
                                         <option value="17:00">17:00</option>
-                                         <option value="17:30">17:30</option>
+                                        <option value="17:30">17:30</option>
                                     </select>
                                 </div>
                                 <div class="flex-grow-1">
@@ -97,7 +104,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <button type="submit" class="btn btn-primary w-100 mt-2">
                             <i class="bi bi-calendar-plus me-1"></i> Сгенерировать слоты
                         </button>
@@ -107,4 +113,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/generate_slots.js' %}"></script>
 {% endblock %}
